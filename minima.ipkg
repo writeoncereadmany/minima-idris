@@ -1,0 +1,7 @@
+package minima
+
+sourcedir = src
+modules = MinimaTypes
+        , test.MinimaTypesTest
+
+tests = MinimaTypesTest.cases
