@@ -14,6 +14,12 @@ yieldsTypeError = assertLeft
 yieldsType : MinimaType -> Either TypeError MinimaType -> IO ()
 yieldsType = assertRight
 
+yieldsContext : Context -> Either TypeError Context -> IO ()
+yieldsContext = assertRight
+
+bindsParameter : String -> MinimaType -> Either TypeError Context -> IO ()
+bindsParameter param type result = assertRight (record { parametrics = [(param, type)]} emptyContext) result
+
 string : MinimaType
 string = Primitive "String"
 
@@ -21,79 +27,105 @@ number : MinimaType
 number = Primitive "Number"
 
 text : MinimaType
-text = NamedType "Text"
+text = Alias "Text"
+
+a : MinimaType
+a = Parameter "a"
 
 textAlias : (String, MinimaType)
 textAlias = ("Text", string)
 
+
+
 canAssignTypeToItself : IO ()
-canAssignTypeToItself = typechecks
-        $ [] =>> string ->? string
+canAssignTypeToItself =
+        typechecks
+        $ emptyContext =>> string ->? string
 
 cannotAssignTypeToADifferentPrimitive : IO ()
-cannotAssignTypeToADifferentPrimitive = yieldsTypeError "Cannot assign String to Number"
-        $ [] =>> string ->? number
+cannotAssignTypeToADifferentPrimitive =
+        yieldsTypeError "Cannot assign String to Number"
+        $ emptyContext =>> string ->? number
 
 canAssignTypeToItsOwnAlias : IO ()
-canAssignTypeToItsOwnAlias = typechecks
-        $ [textAlias] =>> string ->? text
+canAssignTypeToItsOwnAlias =
+        typechecks
+        $ record { aliases = [textAlias] } emptyContext =>> string ->? text
 
 canAssignAliasToItsResolution : IO ()
-canAssignAliasToItsResolution = typechecks
-        $ [textAlias] =>> text ->? string
+canAssignAliasToItsResolution =
+        typechecks
+        $ record { aliases = [textAlias] } emptyContext =>> text ->? string
 
 invalidSourceAliasIsATypeError : IO ()
-invalidSourceAliasIsATypeError = yieldsTypeError "No such type Text found"
-        $ [] =>> text ->? string
+invalidSourceAliasIsATypeError =
+        yieldsTypeError "No such type Text found"
+        $ emptyContext =>> text ->? string
 
 invalidTargetAliasIsATypeError : IO ()
-invalidTargetAliasIsATypeError = yieldsTypeError "No such type Text found"
-        $ [] =>> string ->? text
+invalidTargetAliasIsATypeError =
+        yieldsTypeError "No such type Text found"
+        $ emptyContext =>> string ->? text
+
+assigningConcreteTypeToUnboundIdentifierBindsIt : IO ()
+assigningConcreteTypeToUnboundIdentifierBindsIt =
+        bindsParameter "a" string
+        $ emptyContext =>> string ->? a
 
 canAssignFunctionToItself : IO ()
-canAssignFunctionToItself = typechecks
-        $ [] =>> (Function [] string) ->? (Function [] string)
+canAssignFunctionToItself =
+        typechecks
+        $ emptyContext =>> (Function [] string) ->? (Function [] string)
 
 cannotAssignFunctionToOneReturningADifferentType : IO ()
 cannotAssignFunctionToOneReturningADifferentType =
         yieldsTypeError "Cannot assign String to Number"
-        $ [] =>> (Function [] string) ->? (Function [] number)
+        $ emptyContext =>> (Function [] string) ->? (Function [] number)
 
 cannotAssignFunctionToOneTakingADifferentType : IO ()
 cannotAssignFunctionToOneTakingADifferentType =
         yieldsTypeError "Cannot assign Number to String"
-        $ [] =>> (Function [string] string) ->? (Function [number] string)
+        $ emptyContext =>> (Function [string] string) ->? (Function [number] string)
 
 cannotAssignFunctionToOneOfDifferentArity : IO ()
 cannotAssignFunctionToOneOfDifferentArity =
         yieldsTypeError "Arity mismatch"
-        $ [] =>> (Function [string] string) ->? (Function [] string)
+        $ emptyContext =>> (Function [string] string) ->? (Function [] string)
 
 cannotAssignFunctionToPrimitive : IO ()
 cannotAssignFunctionToPrimitive =
         yieldsTypeError "Cannot assign [] => String to String"
-        $ [] =>> (Function [] string) ->? string
+        $ emptyContext =>> (Function [] string) ->? string
 
 callingAFunctionWithCorrectParamsYieldsReturnType : IO ()
 callingAFunctionWithCorrectParamsYieldsReturnType =
         yieldsType string
-        $ [] =>> (Function [] string) $? []
+        $ emptyContext =>> (Function [] string) $? []
+
+callingAParametricFunctionWillPopulateReturnType : IO ()
+callingAParametricFunctionWillPopulateReturnType =
+        yieldsType string
+        $ emptyContext =>> (Function [a] a) $? [string]
+
+callingAParametricFunctionWillPopulateReturnType : IO ()
+callingAParametricFunctionWillPopulateReturnType =
+        yieldsType string
+        $ emptyContext =>> (Function [a] a) $? [string]
 
 cannotCallFunctionWithArgumentsOfDifferentTypes : IO ()
 cannotCallFunctionWithArgumentsOfDifferentTypes =
         yieldsTypeError "Cannot assign Number to String"
-        $ [] =>> (Function [string] string) $? [number]
+        $ emptyContext =>> (Function [string] string) $? [number]
 
 cannotCallFunctionWithWrongNumberOfArguments : IO ()
 cannotCallFunctionWithWrongNumberOfArguments =
         yieldsTypeError "Arity mismatch: 2 arguments expected, 1 provided"
-        $ [] =>> (Function [string, string] string) $? [string]
-
+        $ emptyContext =>> (Function [string, string] string) $? [string]
 
 cannotCallNonFunction : IO ()
 cannotCallNonFunction =
         yieldsTypeError "Type String is not a function"
-        $ [] =>> string $? [string]
+        $ emptyContext =>> string $? [string]
 
 cases : IO ()
 cases = do canAssignTypeToItself
@@ -102,6 +134,7 @@ cases = do canAssignTypeToItself
            canAssignAliasToItsResolution
            invalidSourceAliasIsATypeError
            invalidTargetAliasIsATypeError
+           assigningConcreteTypeToUnboundIdentifierBindsIt
            canAssignFunctionToItself
            cannotAssignFunctionToOneReturningADifferentType
            cannotAssignFunctionToOneTakingADifferentType
@@ -111,3 +144,4 @@ cases = do canAssignTypeToItself
            cannotCallFunctionWithArgumentsOfDifferentTypes
            cannotCallFunctionWithWrongNumberOfArguments
            cannotCallNonFunction
+           callingAParametricFunctionWillPopulateReturnType

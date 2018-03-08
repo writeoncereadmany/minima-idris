@@ -9,28 +9,47 @@ TypeError = String
 
 data MinimaType : Type where
   Primitive : String -> MinimaType
-  NamedType : String -> MinimaType
+  Alias : String -> MinimaType
   Function : (args : List MinimaType) -> (returns : MinimaType) -> MinimaType
+  Parameter : String -> MinimaType
 
 Show MinimaType where
   show (Primitive x) = x
-  show (NamedType x) = x
+  show (Alias x) = x
   show (Function args rets) = show args ++ " => " ++ show rets
+  show (Parameter x) = x
 
 Eq MinimaType where
   (==) (Primitive x) (Primitive y) = x == y
-  (==) (NamedType x) (NamedType y) = x == y
+  (==) (Alias x) (Alias y) = x == y
   (==) (Function args1 returns1) (Function args2 returns2) = returns1 == returns2
+  (==) (Parameter x) (Parameter y) = x == y
   (==) _ _ = False
 
-Context : Type
-Context = List (String, MinimaType)
+record Context where
+  constructor MkContext
+  aliases, parametrics : List (String, MinimaType)
 
-resolveType : Context -> String -> Maybe MinimaType
-resolveType ctx name = case lookup name ctx of
+emptyContext : Context
+emptyContext = MkContext [] []
+
+Eq Context where
+  (==) ctx1 ctx2 = aliases ctx1 == aliases ctx2 && parametrics ctx1 == parametrics ctx2
+
+Show Context where
+  show ctx = "Aliases: " ++ show (aliases ctx) ++ ", Parameters: " ++ show (parametrics ctx)
+
+resolve : (Context -> List (String, MinimaType)) -> Context -> String -> Maybe MinimaType
+resolve f ctx name = case lookup name (f ctx) of
   Nothing => Nothing
-  (Just (NamedType newAlias)) => resolveType ctx newAlias
+  (Just (Alias newAlias)) => resolve f ctx newAlias
   (Just concrete) => Just concrete
+
+resolveAlias : Context -> String -> Maybe MinimaType
+resolveAlias = resolve aliases
+
+resolveParameter : Context -> String -> Maybe MinimaType
+resolveParameter = resolve parametrics
 
 infixl 4 =>>
 interface WithContext a b | a where
@@ -43,10 +62,11 @@ infixl 8 ->?
 
 mutual
   assignTo : Context -> (src : MinimaType) -> (tgt : MinimaType) -> Either TypeError Context
-  assignTo ctx src (NamedType alias) = case resolveType ctx alias of
+  assignTo ctx src (Parameter param) = Right $ record { parametrics $= ((param, src) ::) } ctx
+  assignTo ctx src (Alias alias) = case resolveAlias ctx alias of
       Nothing => Left $ "No such type " ++ alias ++ " found"
       (Just tgt) => ctx =>> src ->? tgt
-  assignTo ctx (NamedType alias) tgt = case resolveType ctx alias of
+  assignTo ctx (Alias alias) tgt = case resolveAlias ctx alias of
       Nothing => Left $ "No such type " ++ alias ++ " found"
       (Just src) => ctx =>> src ->? tgt
   assignTo ctx (Primitive src) (Primitive tgt) = case src == tgt of
@@ -70,15 +90,24 @@ infixl 8 $?
 ($?) : MinimaType -> List MinimaType -> CallOp
 ($?) = Call
 
+
 mutual
+  resolve_returntype : (ctx : Context) -> (returns : MinimaType) -> (assignedArgs : List (Either TypeError Context)) -> Either String MinimaType
+  resolve_returntype ctx (Parameter p) assignedArgs =
+    let possibleTypes = (flip resolveParameter p) <$> (ctx :: rights assignedArgs)
+     in case catMaybes possibleTypes of
+       [] => Right $ Parameter p
+       (x :: xs) => Right x
+  resolve_returntype ctx returns assignedArgs = Right returns
+
   call : Context -> (fun : MinimaType) -> (args : List MinimaType) -> Either TypeError MinimaType
-  call ctx (NamedType x) args = case resolveType ctx x of
+  call ctx (Alias x) args = case resolveAlias ctx x of
     Nothing => Left $ "No such type " ++ x ++ " found"
     (Just x) => ctx =>> x $? args
   call ctx (Function params returns) args = if length params == length args
     then let assignedArgs = zipWith (assignTo ctx) args params
           in case lefts assignedArgs of
-             [] => Right returns
+             [] => resolve_returntype ctx returns assignedArgs
              (x :: xs) => Left x
     else Left $ "Arity mismatch: " ++ show (length params) ++ " arguments expected, " ++ show (length args) ++ " provided"
   call _ typ _ = Left $ "Type " ++ show typ ++ " is not a function"
