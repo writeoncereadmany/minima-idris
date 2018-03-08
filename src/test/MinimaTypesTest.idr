@@ -89,6 +89,12 @@ cannotCallFunctionWithWrongNumberOfArguments =
         assertLeft "Arity mismatch: 2 arguments expected, 1 provided"
         $ [] =>> (Function [string, string] string) $? [string]
 
+
+cannotCallNonFunction : IO ()
+cannotCallNonFunction =
+        assertLeft "Type String is not a function"
+        $ [] =>> string $? [string]
+
 cases : IO ()
 cases = do canAssignTypeToItself
            cannotAssignTypeToADifferentPrimitive
@@ -104,3 +110,4 @@ cases = do canAssignTypeToItself
            callingAFunctionWithCorrectParamsYieldsReturnType
            cannotCallFunctionWithArgumentsOfDifferentTypes
            cannotCallFunctionWithWrongNumberOfArguments
+           cannotCallNonFunction

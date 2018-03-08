@@ -81,7 +81,7 @@ mutual
              [] => Right returns
              (x :: xs) => Left x
     else Left $ "Arity mismatch: " ++ show (length params) ++ " arguments expected, " ++ show (length args) ++ " provided"
-  call _ typ _ = Left $ "Type " ++ show typ ++ " is not callable"
+  call _ typ _ = Left $ "Type " ++ show typ ++ " is not a function"
 
   WithContext CallOp (Either TypeError MinimaType) where
     ctx =>> (Call fun args) = call ctx fun args
