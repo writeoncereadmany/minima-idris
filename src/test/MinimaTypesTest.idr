@@ -107,10 +107,10 @@ callingAParametricFunctionWillPopulateReturnType =
         yieldsType string
         $ emptyContext =>> (Function [a] a) $? [string]
 
-callingAParametricFunctionWillPopulateReturnType : IO ()
-callingAParametricFunctionWillPopulateReturnType =
-        yieldsType string
-        $ emptyContext =>> (Function [a] a) $? [string]
+callingAParametricFunctionWithIncompatibleParametersYieldsATypeError : IO ()
+callingAParametricFunctionWithIncompatibleParametersYieldsATypeError =
+        yieldsTypeError "Incompatible parameters: a cannot be all of [String, Number]"
+        $ emptyContext =>> (Function [a, a] a) $? [string, number]
 
 cannotCallFunctionWithArgumentsOfDifferentTypes : IO ()
 cannotCallFunctionWithArgumentsOfDifferentTypes =
@@ -145,3 +145,4 @@ cases = do canAssignTypeToItself
            cannotCallFunctionWithWrongNumberOfArguments
            cannotCallNonFunction
            callingAParametricFunctionWillPopulateReturnType
+           callingAParametricFunctionWithIncompatibleParametersYieldsATypeError

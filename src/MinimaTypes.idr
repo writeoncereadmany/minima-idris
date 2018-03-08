@@ -90,6 +90,10 @@ infixl 8 $?
 ($?) : MinimaType -> List MinimaType -> CallOp
 ($?) = Call
 
+allEqual : (Eq a) => List a -> Bool
+allEqual [] = True
+allEqual [x] = True
+allEqual (x :: rest@(y :: ys)) = x == y && allEqual rest
 
 mutual
   resolve_returntype : (ctx : Context) -> (returns : MinimaType) -> (assignedArgs : List (Either TypeError Context)) -> Either String MinimaType
@@ -97,7 +101,9 @@ mutual
     let possibleTypes = (flip resolveParameter p) <$> (ctx :: rights assignedArgs)
      in case catMaybes possibleTypes of
        [] => Right $ Parameter p
-       (x :: xs) => Right x
+       bindings@(x :: xs) => if allEqual bindings
+         then Right x
+         else Left $ "Incompatible bindings: " ++ p ++ " cannot be all of " ++ show bindings
   resolve_returntype ctx returns assignedArgs = Right returns
 
   call : Context -> (fun : MinimaType) -> (args : List MinimaType) -> Either TypeError MinimaType
