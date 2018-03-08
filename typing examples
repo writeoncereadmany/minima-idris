@@ -1,0 +1,31 @@
+foo is [x, y] => x:plus[y]
+> :t foo
+> [{ plus: [a] => b }, a] => b
+
+start off with x, y both unbound: [(x : Unbound), (y: Unbound)]
+x:plus requires x : { plus : a } -> [(x : { plus : a }), (y : Unbound), (a : Unbound)]
+(x:plus)[y] requires a : [y] => b -> [(x : { plus : a }), (y : Unbound), (a : [y] => b), (b: Unbound)]
+any bound terms can be substituted back:
+x is not referenced in any other types, nothing to do
+y is Unbound
+a is bound and referenced in x:
+foo[x, y] -> [(x : { plus : [y] => b}), (y : Unbound), (b : Unbound)]
+
+foo[4, "Hats"]
+attempting to unify:
+[(x : { plus : [y] => b}), (y : Unbound), (b : Unbound)] (typeof foo)
+[(x : Number), (y : String), (b : Unbound)] (provided args, desired return type)
+can we unify (x : Number) with (x : { plus : [y] => b})? yes, and implies x : Number, y : Number, b : Number
+
+each operation provides a type, and then we unify types
+
+unify : Types -> Types -> Either TypeError Types
+
+
+bar is [x, Number y] => x:plus[y]
+> :t bar
+> [{ plus: [Number] => b}, Number] => b
+
+baz is [Number x, y] => x:plus[y]
+> :t baz
+> [Number, Number] => Number

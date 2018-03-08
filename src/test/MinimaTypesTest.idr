@@ -71,6 +71,11 @@ cannotAssignFunctionToPrimitive =
         yieldsTypeError "Cannot assign [] => String to String"
         $ [] =>> (Function [] string) ->? string
 
+callingAFunctionWithCorrectParamsYieldsReturnType : IO ()
+callingAFunctionWithCorrectParamsYieldsReturnType =
+        yieldsType string
+        $ [] =>> (Function [] string) $? []
+
 cases : IO ()
 cases = do canAssignTypeToItself
            cannotAssignTypeToADifferentPrimitive
