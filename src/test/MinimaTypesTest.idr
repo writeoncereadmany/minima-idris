@@ -11,6 +11,9 @@ typechecks = assertNothing
 yieldsTypeError : (Show a, Eq a) => a -> Maybe a -> IO ()
 yieldsTypeError = assertJust
 
+yieldsType : (Show a, Show b, Eq b) => b -> Either a b -> IO ()
+yieldsType = assertRight
+
 string : MinimaType
 string = Primitive "String"
 
@@ -76,6 +79,16 @@ callingAFunctionWithCorrectParamsYieldsReturnType =
         yieldsType string
         $ [] =>> (Function [] string) $? []
 
+cannotCallFunctionWithArgumentsOfDifferentTypes : IO ()
+cannotCallFunctionWithArgumentsOfDifferentTypes =
+        assertLeft "Cannot assign Number to String"
+        $ [] =>> (Function [string] string) $? [number]
+
+cannotCallFunctionWithWrongNumberOfArguments : IO ()
+cannotCallFunctionWithWrongNumberOfArguments =
+        assertLeft "Arity mismatch: 2 arguments expected, 1 provided"
+        $ [] =>> (Function [string, string] string) $? [string]
+
 cases : IO ()
 cases = do canAssignTypeToItself
            cannotAssignTypeToADifferentPrimitive
@@ -88,3 +101,6 @@ cases = do canAssignTypeToItself
            cannotAssignFunctionToOneTakingADifferentType
            cannotAssignFunctionToOneOfDifferentArity
            cannotAssignFunctionToPrimitive
+           callingAFunctionWithCorrectParamsYieldsReturnType
+           cannotCallFunctionWithArgumentsOfDifferentTypes
+           cannotCallFunctionWithWrongNumberOfArguments

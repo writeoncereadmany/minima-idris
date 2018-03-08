@@ -11,12 +11,17 @@ data MinimaType : Type where
   Primitive : String -> MinimaType
   NamedType : String -> MinimaType
   Function : (args : List MinimaType) -> (returns : MinimaType) -> MinimaType
-  Unbound : String -> MinimaType
 
 Show MinimaType where
   show (Primitive x) = x
   show (NamedType x) = x
   show (Function args rets) = show args ++ " => " ++ show rets
+
+Eq MinimaType where
+  (==) (Primitive x) (Primitive y) = x == y
+  (==) (NamedType x) (NamedType y) = x == y
+  (==) (Function args1 returns1) (Function args2 returns2) = returns1 == returns2
+  (==) _ _ = False
 
 Context : Type
 Context = List (String, MinimaType)
@@ -70,7 +75,12 @@ mutual
   call ctx (NamedType x) args = case resolveType ctx x of
     Nothing => Left $ "No such type " ++ x ++ " found"
     (Just x) => ctx =>> x $? args
-  call ctx (Function params returns) args = ?call_rhs_3
+  call ctx (Function params returns) args = if length params == length args
+    then let assignedArgs = zipWith (assignTo ctx) args params
+          in case catMaybes assignedArgs of
+             [] => Right returns
+             (x :: xs) => Left x
+    else Left $ "Arity mismatch: " ++ show (length params) ++ " arguments expected, " ++ show (length args) ++ " provided"
   call _ typ _ = Left $ "Type " ++ show typ ++ " is not callable"
 
   WithContext CallOp (Either TypeError MinimaType) where
