@@ -7,15 +7,9 @@ assertEq given expected = if given == expected
     then putStrLn "Passed"
     else putStrLn $ "Failed: expected " ++ show expected ++ " but got " ++ show given
 
-assertNothing : Show a => (given : Maybe a) -> IO ()
-assertNothing Nothing = putStrLn "Passed"
-assertNothing (Just x) = putStrLn $ "Failed: expected Nothing, but got " ++ show x
-
-assertJust : (Show a, Eq a) => (expected : a) -> (given : Maybe a) -> IO ()
-assertJust expected Nothing = putStrLn $ "Failed: expected " ++ show expected ++ ", got Nothing"
-assertJust expected (Just actual) = if actual == expected
-    then putStrLn "Passed"
-    else putStrLn $ "Failed: expected " ++ show expected ++ ", got " ++ show actual
+assertIsRight : (Show a) => (given : Either a b) -> IO ()
+assertIsRight (Left l) = putStrLn $ "Failed: expected a Right, but got Left " ++ show l
+assertIsRight (Right r) = putStrLn "Passed"
 
 assertLeft : (Show a, Show b, Eq a) => (expected : a) -> (given : Either a b) -> IO ()
 assertLeft expected (Right actual) = putStrLn $ "Failed: expected Left " ++ show expected ++ ", got Right " ++ show actual

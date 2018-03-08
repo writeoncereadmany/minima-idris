@@ -42,27 +42,27 @@ infixl 8 ->?
 (->?) = Assignment
 
 mutual
-  assignTo : Context -> (src : MinimaType) -> (tgt : MinimaType) -> Maybe TypeError
+  assignTo : Context -> (src : MinimaType) -> (tgt : MinimaType) -> Either TypeError Context
   assignTo ctx src (NamedType alias) = case resolveType ctx alias of
-      Nothing => Just $ "No such type " ++ alias ++ " found"
+      Nothing => Left $ "No such type " ++ alias ++ " found"
       (Just tgt) => ctx =>> src ->? tgt
   assignTo ctx (NamedType alias) tgt = case resolveType ctx alias of
-      Nothing => Just $ "No such type " ++ alias ++ " found"
+      Nothing => Left $ "No such type " ++ alias ++ " found"
       (Just src) => ctx =>> src ->? tgt
-  assignTo _ (Primitive src) (Primitive tgt) = case src == tgt of
-      False => Just ("Cannot assign " ++ src ++ " to " ++ tgt)
-      True => Nothing
+  assignTo ctx (Primitive src) (Primitive tgt) = case src == tgt of
+      False => Left ("Cannot assign " ++ src ++ " to " ++ tgt)
+      True => Right ctx
   assignTo ctx (Function srcArgs srcReturns) (Function tgtArgs tgtReturns) =
       if (length srcArgs) /= (length tgtArgs)
-          then Just "Arity mismatch"
+          then Left "Arity mismatch"
           else let argsErrors = zipWith (assignTo ctx) tgtArgs srcArgs
                    returnsErrors = ctx =>> srcReturns ->? tgtReturns
-                in case catMaybes (returnsErrors :: argsErrors) of
-                     [] => Nothing
-                     (x :: xs) => Just x
-  assignTo _ src tgt = Just $ "Cannot assign " ++ show src ++ " to " ++ show tgt
+                in case lefts (returnsErrors :: argsErrors) of
+                     [] => Right ctx
+                     (x :: xs) => Left x
+  assignTo _ src tgt = Left $ "Cannot assign " ++ show src ++ " to " ++ show tgt
 
-  WithContext AssOp (Maybe TypeError) where
+  WithContext AssOp (Either TypeError Context) where
     ctx =>> (Assignment src tgt) = assignTo ctx src tgt
 
 data CallOp = Call MinimaType (List MinimaType)
@@ -77,7 +77,7 @@ mutual
     (Just x) => ctx =>> x $? args
   call ctx (Function params returns) args = if length params == length args
     then let assignedArgs = zipWith (assignTo ctx) args params
-          in case catMaybes assignedArgs of
+          in case lefts assignedArgs of
              [] => Right returns
              (x :: xs) => Left x
     else Left $ "Arity mismatch: " ++ show (length params) ++ " arguments expected, " ++ show (length args) ++ " provided"

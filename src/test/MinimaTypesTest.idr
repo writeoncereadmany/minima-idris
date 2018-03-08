@@ -5,13 +5,13 @@ import test.Assertions
 
 %access export
 
-typechecks : (Show a) => Maybe a -> IO ()
-typechecks = assertNothing
+typechecks : Either TypeError b -> IO ()
+typechecks = assertIsRight
 
-yieldsTypeError : (Show a, Eq a) => a -> Maybe a -> IO ()
-yieldsTypeError = assertJust
+yieldsTypeError : (Show b) => TypeError -> Either TypeError b -> IO ()
+yieldsTypeError = assertLeft
 
-yieldsType : (Show a, Show b, Eq b) => b -> Either a b -> IO ()
+yieldsType : MinimaType -> Either TypeError MinimaType -> IO ()
 yieldsType = assertRight
 
 string : MinimaType
@@ -81,18 +81,18 @@ callingAFunctionWithCorrectParamsYieldsReturnType =
 
 cannotCallFunctionWithArgumentsOfDifferentTypes : IO ()
 cannotCallFunctionWithArgumentsOfDifferentTypes =
-        assertLeft "Cannot assign Number to String"
+        yieldsTypeError "Cannot assign Number to String"
         $ [] =>> (Function [string] string) $? [number]
 
 cannotCallFunctionWithWrongNumberOfArguments : IO ()
 cannotCallFunctionWithWrongNumberOfArguments =
-        assertLeft "Arity mismatch: 2 arguments expected, 1 provided"
+        yieldsTypeError "Arity mismatch: 2 arguments expected, 1 provided"
         $ [] =>> (Function [string, string] string) $? [string]
 
 
 cannotCallNonFunction : IO ()
 cannotCallNonFunction =
-        assertLeft "Type String is not a function"
+        yieldsTypeError "Type String is not a function"
         $ [] =>> string $? [string]
 
 cases : IO ()
