@@ -20,3 +20,7 @@ mutual
     (|=>) bindings (UnionOperation x y) = unifyBinding bindings x y
 
   unifyBinding : Bindings -> DeBruijnIndex -> DeBruijnIndex -> MinimaType
+  unifyBinding bindings a b = case (lookupType a bindings, lookupType b bindings) of
+     (Primitive x, Primitive y) => if x == y then Primitive x else Union (sort [a, b])
+     (Union as, Union bs)       => Union (sort $ union as bs)
+     (_, _) => Unbound

@@ -2,8 +2,8 @@ module Assertions
 
 %access export
 
-assertEq : (Show a, Eq a) => (given : a) -> (expected : a) -> IO ()
-assertEq given expected = if given == expected
+assertEq : (Show a, Eq a) => (expected : a) -> (given : a) -> IO ()
+assertEq expected given = if given == expected
     then putStrLn "Passed"
     else putStrLn $ "Failed: expected " ++ show expected ++ " but got " ++ show given
 
