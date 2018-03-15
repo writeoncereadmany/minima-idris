@@ -17,10 +17,10 @@ number = (0, 1)
 text : DeBruijnIndex
 text = (0, 2)
 
-stringImpl : MinimaType2
+stringImpl : MinimaType
 stringImpl = Primitive string
 
-numberImpl : MinimaType2
+numberImpl : MinimaType
 numberImpl = Primitive number
 
 primitives : Bindings
@@ -29,7 +29,7 @@ primitives = [(string, stringImpl), (number, numberImpl)]
 plus : DeBruijnIndex
 plus = (0, 3)
 
-plusImpl : MinimaType2
+plusImpl : MinimaType
 plusImpl = Function [number, number] number
 
 prelude : Bindings

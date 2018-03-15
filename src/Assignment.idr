@@ -16,7 +16,7 @@ mutual
   WithBindings AssOp (Either TypeErrors Bindings) where
     (|=>) bindings (Assignment src tgt) = assignTo bindings src tgt
 
-  assignUnion : (bindings : Bindings) -> (tgts : List DeBruijnIndex) -> (src : DeBruijnIndex) -> Either (List String) (List ((Integer, Integer), MinimaType2))
+  assignUnion : (bindings : Bindings) -> (tgts : List DeBruijnIndex) -> (src : DeBruijnIndex) -> Either TypeErrors Bindings
   assignUnion bindings tgts src = case assignTo bindings src <$> tgts of
      [] => Left ["Cannot assign to an empty union"]
      xs => case rights xs of
@@ -34,7 +34,7 @@ mutual
          else Left ["Cannot assign " ++ show s ++ " to " ++ show t]
       (Function sargs sret, Function targs tret) => case zipWith (assignTo bindings) targs sargs of
          assignments => case lefts assignments of
-            [] => (unify $ bindings :: rights assignments) |=> sret ->? tret
+            [] => (unifyBindings $ bindings :: rights assignments) |=> sret ->? tret
             typeErrors => Left $ join typeErrors
       (Union srcs, Union tgts) => case assignUnion bindings tgts <$> srcs of
          [] => Left ["Empty union"]
