@@ -127,6 +127,44 @@ cannotAssignParametricFunctionWhenBindingArgTypesMeansReturnTypesMismatch =
       in yieldsTypeError "Cannot assign (0, 0) to (0, 1)"
          $ bindings |=> genericFunction ->? lengthFunction
 
+canAssignUnionToSameUnionType : IO ()
+canAssignUnionToSameUnionType =
+     let numberOrString = (0,6)
+         stringOrNumber = (0,7)
+         numberOrStringImpl = Union [(0, 1), (0, 0)]
+         stringOrNumberImpl = Union [(0, 0), (0, 1)]
+         bindings = (numberOrString, numberOrStringImpl) :: (stringOrNumber, stringOrNumberImpl) :: prelude
+      in typechecks
+         $ bindings |=> numberOrString ->? stringOrNumber
+
+canAssignUnionToLargerUnionType : IO ()
+canAssignUnionToLargerUnionType =
+    let numberOrString = (0,6)
+        justNumber = (0,7)
+        numberOrStringImpl = Union [(0, 1), (0, 0)]
+        justNumberImpl = Union [(0, 1)]
+        bindings = (numberOrString, numberOrStringImpl) :: (justNumber, justNumberImpl) :: prelude
+     in typechecks
+        $ bindings |=> justNumber ->? numberOrString
+
+canAssignPrimitiveToUnionType : IO ()
+canAssignPrimitiveToUnionType =
+    let numberOrString = (0,6)
+        numberOrStringImpl = Union [(0, 1), (0, 0)]
+        bindings = (numberOrString, numberOrStringImpl) :: prelude
+     in typechecks
+        $ bindings |=> number ->? numberOrString
+
+
+cannotAssignUnionToSmallerUnionType : IO ()
+cannotAssignUnionToSmallerUnionType =
+    let numberOrString = (0,6)
+        justNumber = (0,7)
+        numberOrStringImpl = Union [(0, 1), (0, 0)]
+        justNumberImpl = Union [(0, 1)]
+        bindings = (numberOrString, numberOrStringImpl) :: (justNumber, justNumberImpl) :: prelude
+     in yieldsTypeError "No suitable target type for (0, 0) in union [(0, 1)]"
+        $ bindings |=> numberOrString ->? justNumber
 
 cases : IO ()
 cases = do putStrLn "  ** Test suite MinimaTypesTest2: "
@@ -141,3 +179,7 @@ cases = do putStrLn "  ** Test suite MinimaTypesTest2: "
            cannotAssignConcreteFunctionToParametricOne
            cannotAssignParametricFunctionWhenBindingArgTypesMeansReturnTypesMismatch
            cannotAssignFunctionWhereReturnTypesDiffer
+           canAssignUnionToSameUnionType
+           canAssignUnionToLargerUnionType
+           cannotAssignUnionToSmallerUnionType
+           canAssignPrimitiveToUnionType
