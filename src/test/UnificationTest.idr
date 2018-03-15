@@ -40,13 +40,27 @@ stringOrBoolImpl = Union [string, bool]
 stringOrBoolOrNumberImpl : MinimaType
 stringOrBoolOrNumberImpl = Union [string, number, bool]
 
+getString : DeBruijnIndex
+getString = (0, 6)
+
+getStringImpl : MinimaType
+getStringImpl = Function [] string
+
+getNumber : DeBruijnIndex
+getNumber = (0, 7)
+
+getNumberImpl : MinimaType
+getNumberImpl = Function [] number
+
 prelude : Bindings
 prelude = [
   (string, stringImpl),
   (number, numberImpl),
   (bool, boolImpl),
   (stringOrNumber, stringOrNumberImpl),
-  (stringOrBool, stringOrBoolImpl)
+  (stringOrBool, stringOrBoolImpl),
+  (getString, getStringImpl),
+  (getNumber, getNumberImpl)
   ]
 
 unifyingIdenticalPrimitivesYieldsThatPrimitive : IO ()
@@ -63,7 +77,6 @@ unifyingIdenticalUnionsYieldsSameUnion : IO ()
 unifyingIdenticalUnionsYieldsSameUnion =
   assertEq stringOrNumberImpl
   $ prelude |=> stringOrNumber |? stringOrNumber
-
 
 unifyingOverlappingUnionsYieldsCompactRepresentation : IO ()
 unifyingOverlappingUnionsYieldsCompactRepresentation =
@@ -85,6 +98,15 @@ unifyingPrimitiveAndOverlappingUnionYieldsOriginalUnion =
   assertEq stringOrNumberImpl
   $ prelude |=> string |? stringOrNumber
 
+-- this is a big question: args/return types of functions are stored by their
+-- de bruijn index. But if they're synthetic types, then (by definition) they
+-- haven't already been defined, and don't have de bruijn indices.
+-- if i synthesise a new type and then bind it, then i need access to the bindings
+-- maybe i need to go back to old approach where bound type is one implementation
+-- amongst others? 
+unifyingFunctionTypesWithOverlappingArgsButDifferentReturnTypesUnionsReturnTypes : IO ()
+unifyingFunctionTypesWithOverlappingArgsButDifferentReturnTypesUnionsReturnTypes =
+  ?how_do_i_synthesise_return_types_on_the_fly
 
 cases : IO ()
 cases = do putStrLn "  ** Test suite UnificationTest: "
