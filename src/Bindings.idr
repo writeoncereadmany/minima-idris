@@ -4,8 +4,11 @@ import MinimaTypes
 
 %access public export
 
+Binding : Type
+Binding = (DeBruijnIndex, MinimaType)
+
 Bindings : Type
-Bindings = List (DeBruijnIndex, MinimaType)
+Bindings = List Binding
 
 lookupType : DeBruijnIndex -> Bindings -> MinimaType
 lookupType i b = case lookup i b of

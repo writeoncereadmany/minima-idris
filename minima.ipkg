@@ -8,5 +8,7 @@ modules = MinimaTypes
         , Unification
         , test.Assertions
         , test.AssignmentTest
+        , test.UnificationTest
 
 tests = AssignmentTest.cases
+      , UnificationTest.cases
