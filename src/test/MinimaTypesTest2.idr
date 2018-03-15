@@ -155,7 +155,6 @@ canAssignPrimitiveToUnionType =
      in typechecks
         $ bindings |=> number ->? numberOrString
 
-
 cannotAssignUnionToSmallerUnionType : IO ()
 cannotAssignUnionToSmallerUnionType =
     let numberOrString = (0,6)
@@ -165,6 +164,38 @@ cannotAssignUnionToSmallerUnionType =
         bindings = (numberOrString, numberOrStringImpl) :: (justNumber, justNumberImpl) :: prelude
      in yieldsTypeError "No suitable target type for (0, 0) in union [(0, 1)]"
         $ bindings |=> numberOrString ->? justNumber
+
+cannotAssignParametricFunctionWhereInferedUnionReturnTypeSmaller : IO ()
+cannotAssignParametricFunctionWhereInferedUnionReturnTypeSmaller =
+    let a = (0, 6)
+        genericFunction = (0, 7)
+        genericFunctionImpl = Function [a, a] a
+        stringOrNumber = (0,8)
+        stringOrNumberImpl = Union [(0,0), (0,1)]
+        unionFunction = (0,9)
+        unionFunctionImpl = Function [string, number] string
+        bindings = (genericFunction, genericFunctionImpl)
+                :: (stringOrNumber, stringOrNumberImpl)
+                :: (unionFunction, unionFunctionImpl)
+                :: prelude
+     in yieldsTypeError "not sure what exactly yet"
+        $ bindings |=> genericFunction ->? unionFunction
+
+canAssignParametricFunctionAndInferUnionReturnType : IO ()
+canAssignParametricFunctionAndInferUnionReturnType =
+    let a = (0, 6)
+        genericFunction = (0, 7)
+        genericFunctionImpl = Function [a, a] a
+        stringOrNumber = (0,8)
+        stringOrNumberImpl = Union [(0,0), (0,1)]
+        unionFunction = (0,9)
+        unionFunctionImpl = Function [string, number] stringOrNumber
+        bindings = (genericFunction, genericFunctionImpl)
+                :: (stringOrNumber, stringOrNumberImpl)
+                :: (unionFunction, unionFunctionImpl)
+                :: prelude
+     in typechecks
+        $ bindings |=> genericFunction ->? unionFunction
 
 cases : IO ()
 cases = do putStrLn "  ** Test suite MinimaTypesTest2: "
@@ -183,3 +214,5 @@ cases = do putStrLn "  ** Test suite MinimaTypesTest2: "
            canAssignUnionToLargerUnionType
            cannotAssignUnionToSmallerUnionType
            canAssignPrimitiveToUnionType
+           canAssignParametricFunctionAndInferUnionReturnType
+           cannotAssignParametricFunctionWhereInferedUnionReturnTypeSmaller
