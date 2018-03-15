@@ -1,7 +1,10 @@
-module MinimaTypesTest
+module AssignmentTest
 
 import test.Assertions
 import MinimaTypes
+import Bindings
+import Assignment
+import TypeErrors
 
 %access export
 
@@ -198,7 +201,7 @@ canAssignParametricFunctionAndInferUnionReturnType =
         $ bindings |=> genericFunction ->? unionFunction
 
 cases : IO ()
-cases = do putStrLn "  ** Test suite MinimaTypesTest2: "
+cases = do putStrLn "  ** Test suite AssignmentTest: "
            doesNotNeedBindingsToAssignTypeToItself
            canAssignTypeToItsAlias
            cannotAssignOnePrimitiveToAnother
