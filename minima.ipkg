@@ -5,6 +5,7 @@ modules = MinimaTypes
         , Bindings
         , TypeErrors
         , Assignment
+        , Unification
         , test.Assertions
         , test.AssignmentTest
 

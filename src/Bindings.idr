@@ -15,8 +15,3 @@ lookupType i b = case lookup i b of
 infixl 4 |=>
 interface WithBindings a b | a where
   (|=>) : Bindings -> a -> b
-
-unify : List Bindings -> Bindings
-unify [] = []
--- this is NOT a good implementation of unify!
-unify xs = join xs

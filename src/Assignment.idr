@@ -3,6 +3,7 @@ module Assignment
 import Bindings
 import MinimaTypes
 import TypeErrors
+import Unification
 
 %access public export
 
