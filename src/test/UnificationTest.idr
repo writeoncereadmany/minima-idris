@@ -26,13 +26,13 @@ boolImpl : MinimaType
 boolImpl = Primitive bool
 
 stringOrNumber : DeBruijnIndex
-stringOrNumber = (0, 3)
+stringOrNumber = (0, 4)
 
 stringOrNumberImpl : MinimaType
 stringOrNumberImpl = Union [string, number]
 
 stringOrBool : DeBruijnIndex
-stringOrBool = (0, 4)
+stringOrBool = (0, 5)
 
 stringOrBoolImpl : MinimaType
 stringOrBoolImpl = Union [string, bool]
@@ -44,6 +44,7 @@ prelude : Bindings
 prelude = [
   (string, stringImpl),
   (number, numberImpl),
+  (bool, boolImpl),
   (stringOrNumber, stringOrNumberImpl),
   (stringOrBool, stringOrBoolImpl)
   ]
@@ -69,6 +70,21 @@ unifyingOverlappingUnionsYieldsCompactRepresentation =
   assertEq stringOrBoolOrNumberImpl
   $ prelude |=> stringOrNumber |? stringOrBool
 
+unifyingUnionAndPrimitiveYieldsUnion : IO ()
+unifyingUnionAndPrimitiveYieldsUnion =
+  assertEq stringOrBoolOrNumberImpl
+  $ prelude |=> stringOrNumber |? bool
+
+unifyingPrimitiveAndUnionYieldsUnion : IO ()
+unifyingPrimitiveAndUnionYieldsUnion =
+  assertEq stringOrBoolOrNumberImpl
+  $ prelude |=> bool |? stringOrNumber
+
+unifyingPrimitiveAndOverlappingUnionYieldsOriginalUnion : IO ()
+unifyingPrimitiveAndOverlappingUnionYieldsOriginalUnion =
+  assertEq stringOrNumberImpl
+  $ prelude |=> string |? stringOrNumber
+
 
 cases : IO ()
 cases = do putStrLn "  ** Test suite UnificationTest: "
@@ -76,3 +92,6 @@ cases = do putStrLn "  ** Test suite UnificationTest: "
            unifyingDifferentPrimitivesYieldsUnion
            unifyingIdenticalUnionsYieldsSameUnion
            unifyingOverlappingUnionsYieldsCompactRepresentation
+           unifyingPrimitiveAndUnionYieldsUnion
+           unifyingUnionAndPrimitiveYieldsUnion
+           unifyingPrimitiveAndOverlappingUnionYieldsOriginalUnion

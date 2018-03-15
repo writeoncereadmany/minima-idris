@@ -21,6 +21,8 @@ mutual
 
   unifyBinding : Bindings -> DeBruijnIndex -> DeBruijnIndex -> MinimaType
   unifyBinding bindings a b = case (lookupType a bindings, lookupType b bindings) of
+     (Union xs, Union ys)       => Union (sort $ union xs ys)
+     (Union xs, _)              => Union (sort $ union xs [b])
+     (_, Union ys)              => Union (sort $ union [a] ys)
      (Primitive x, Primitive y) => if x == y then Primitive x else Union (sort [a, b])
-     (Union as, Union bs)       => Union (sort $ union as bs)
      (_, _) => Unbound
