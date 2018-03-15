@@ -109,7 +109,7 @@ callingAParametricFunctionWillPopulateReturnType =
 
 callingAParametricFunctionWithIncompatibleParametersYieldsATypeError : IO ()
 callingAParametricFunctionWithIncompatibleParametersYieldsATypeError =
-        yieldsTypeError "Incompatible parameters: a cannot be all of [String, Number]"
+        yieldsTypeError "Incompatible bindings: a cannot be all of [String, Number]"
         $ emptyContext =>> (Function [a, a] a) $? [string, number]
 
 cannotCallFunctionWithArgumentsOfDifferentTypes : IO ()
@@ -128,7 +128,8 @@ cannotCallNonFunction =
         $ emptyContext =>> string $? [string]
 
 cases : IO ()
-cases = do canAssignTypeToItself
+cases = do putStrLn "  ** Test suite MinimaTypesTest: "
+           canAssignTypeToItself
            cannotAssignTypeToADifferentPrimitive
            canAssignTypeToItsOwnAlias
            canAssignAliasToItsResolution
