@@ -36,7 +36,10 @@ mutual
     then Right dx
     else Right $ Union [dx, dy]
 
-  unify b (Function args returns) y = ?unify_rhs_3
+  unify b (Function argsa reta) (Function argsb retb) = do returns <- b |=> reta |? retb
+                                                           pure $ Function argsa returns
+  -- if we get here, the types are disjoint: create a union of the two types
+  unify b x y = b |=> Union [x] |? y
 
 updateFirst : (Eq a) => List (a, b) -> a -> b -> List (a, b)
 updateFirst [] x y = []

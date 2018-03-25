@@ -26,6 +26,18 @@ maybeNumber = Union [number, nothing]
 maybeStringOrNumber : MinimaType
 maybeStringOrNumber = Union [string, number, nothing]
 
+stringOrNumber : MinimaType
+stringOrNumber = Union [string, number]
+
+showNumber : MinimaType
+showNumber = Function [number] string
+
+identity : MinimaType
+identity = Function [number] number
+
+stringOrShowNumber : MinimaType
+stringOrShowNumber = Union [string, showNumber]
+
 yieldsType : (Show a) => MinimaType -> Either a MinimaType -> IO ()
 yieldsType = assertRight
 
@@ -52,6 +64,16 @@ unifyingOverlappingUnionsYieldsAllPossibleForms =
       yieldsType maybeStringOrNumber
       $ [] |=> maybeString |? maybeNumber
 
+unifyingDataAndFunctionsYieldsUnion : IO ()
+unifyingDataAndFunctionsYieldsUnion =
+      yieldsType stringOrShowNumber
+      $ [] |=> string |? showNumber
+
+unifyingFunctionsWithDifferentReturnTypesYieldsFunctionWithUnionReturnType : IO ()
+unifyingFunctionsWithDifferentReturnTypesYieldsFunctionWithUnionReturnType =
+      yieldsType (Function [number] stringOrNumber)
+      $ [] |=> showNumber |? identity
+
 nonOverlappingBindingsCondenseToSameBindings : IO ()
 nonOverlappingBindingsCondenseToSameBindings =
       yieldsBindings [((0, 0), string), ((0, 1), number)]
@@ -76,3 +98,5 @@ cases = do putStrLn "  ** Test suite UnificationTest: "
            nonOverlappingBindingsCondenseToSameBindings
            overlappingBindingsCondenseToUnificationOfBindings
            multipleRedefinitionsCondenseToSingleDefinition
+           unifyingDataAndFunctionsYieldsUnion
+           unifyingFunctionsWithDifferentReturnTypesYieldsFunctionWithUnionReturnType
