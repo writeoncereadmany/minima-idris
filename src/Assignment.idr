@@ -3,6 +3,7 @@ module Assignment
 import Bindings
 import MinimaTypes
 import TypeErrors
+import Unification
 
 %access public export
 
@@ -22,24 +23,24 @@ mutual
          then Left ["Arity mismatch."]
          else let assignments = zipWith (assignTo b) tgtargs srcargs
            in case lefts $ assignments of
-              [] => Right $ mergeAll $ rights assignments
+              [] => Right $ unifyAll $ rights assignments
               typeErrors => Left $ join typeErrors
 
   assignToFunction : Bindings -> JustFunction -> JustFunction -> Either TypeErrors Bindings
   assignToFunction b (JFunction srcargs srcret) (JFunction tgtargs tgtret) =
        do newBindings <- assignArgs b srcargs tgtargs
-          mergeBindings b newBindings |=> srcret ->? tgtret
+          unifyBindings b newBindings |=> srcret ->? tgtret
 
   assignToUnion : Bindings -> MinimaType -> List MinimaType -> Either TypeErrors Bindings
   assignToUnion b src tgts = let assignments = assignTo b src <$> tgts
                               in case rights assignments of
                                  []       => Left $ join $ lefts assignments
-                                 bindings => Right $ foldl mergeBindings [] bindings
+                                 bindings => Right $ unifyAll bindings
 
   assignUnionTo : Bindings -> List MinimaType -> MinimaType -> Either TypeErrors Bindings
   assignUnionTo b srcs tgt = let assignments = (flip (assignTo b) tgt) <$> srcs
                               in case lefts assignments of
-                                 [] => Right $ mergeAll (rights assignments)
+                                 [] => Right $ unifyAll (rights assignments)
                                  typeErrors => Left $ join typeErrors
 
   assignTo : Bindings -> MinimaType -> MinimaType -> Either TypeErrors Bindings

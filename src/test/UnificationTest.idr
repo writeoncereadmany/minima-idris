@@ -29,6 +29,9 @@ maybeStringOrNumber = Union [string, number, nothing]
 yieldsType : (Show a) => MinimaType -> Either a MinimaType -> IO ()
 yieldsType = assertRight
 
+yieldsBindings : (Show a) => Bindings -> Either a Bindings -> IO ()
+yieldsBindings = assertRight
+
 unifyingSameDatatypeYieldsThatDatatype : IO ()
 unifyingSameDatatypeYieldsThatDatatype =
       yieldsType string
@@ -49,9 +52,27 @@ unifyingOverlappingUnionsYieldsAllPossibleForms =
       yieldsType maybeStringOrNumber
       $ [] |=> maybeString |? maybeNumber
 
+nonOverlappingBindingsCondenseToSameBindings : IO ()
+nonOverlappingBindingsCondenseToSameBindings =
+      yieldsBindings [((0, 0), string), ((0, 1), number)]
+      $ condense [((0, 0), string), ((0, 1), number)]
+
+multipleRedefinitionsCondenseToSingleDefinition : IO ()
+multipleRedefinitionsCondenseToSingleDefinition =
+      yieldsBindings [((0, 0), string)]
+      $ condense [((0, 0), string), ((0, 0), string), ((0, 0), string)]
+
+overlappingBindingsCondenseToUnificationOfBindings : IO ()
+overlappingBindingsCondenseToUnificationOfBindings =
+      yieldsBindings [((1, 0), maybeString)]
+      $ condense [((1, 0), string), ((1, 0), nothing)]
+
 cases : IO ()
 cases = do putStrLn "  ** Test suite UnificationTest: "
            unifyingSameDatatypeYieldsThatDatatype
            unifyingDifferentDatatypesYieldsTheirUnion
            unifyingUnionAndSubsetYieldsThatUnion
            unifyingOverlappingUnionsYieldsAllPossibleForms
+           nonOverlappingBindingsCondenseToSameBindings
+           overlappingBindingsCondenseToUnificationOfBindings
+           multipleRedefinitionsCondenseToSingleDefinition
