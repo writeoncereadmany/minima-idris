@@ -43,13 +43,12 @@ mutual
                                  typeErrors => Left $ join typeErrors
 
   assignTo : Bindings -> MinimaType -> MinimaType -> Either TypeErrors Bindings
-  assignTo bindings a (Unbound b) = Right [(b, a)]
-  assignTo bindings (Unbound a) tgt = case lookupType a bindings of
-    (Unbound _) => Left ["Cannot assign unbound to " ++ show tgt]
-    other => bindings |=> other ->? tgt
 
-  assignTo bindings (Bound a) b = bindings |=> lookupType a bindings ->? b
-  assignTo bindings a (Bound b) = bindings |=> a ->? lookupType b bindings
+  assignTo bindings a (Unbound b) = Right [(b, a)]
+  assignTo bindings (Unbound a) tgt = Left ["Cannot assign unbound to " ++ show tgt]
+
+  assignTo bindings (Named a) b = bindings |=> lookupType a bindings ->? b
+  assignTo bindings a (Named b) = bindings |=> a ->? lookupType b bindings
 
   assignTo bindings (Union srcs) tgt = assignUnionTo bindings srcs tgt
   assignTo bindings src (Union tgts) = assignToUnion bindings src tgts

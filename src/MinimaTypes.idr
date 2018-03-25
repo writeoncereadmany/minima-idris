@@ -9,14 +9,14 @@ DeBruijnIndex = (Integer, Integer)
 
 -- by having types refer to other types, type synthesis is no biggie
 data MinimaType : Type where
-  Bound : (refersTo : DeBruijnIndex) -> MinimaType
+  Named : (introduction : DeBruijnIndex) -> MinimaType
   Data : (initialDefinition : DeBruijnIndex) -> MinimaType
   Function : (args : List MinimaType) -> (returns : MinimaType) -> MinimaType
   Union : (forms : List MinimaType) -> MinimaType
   Unbound : (introduction : DeBruijnIndex) -> MinimaType
 
 Show MinimaType where
-  show (Bound refersTo) = "Bound " ++ show refersTo
+  show (Named refersTo) = "Named " ++ show refersTo
   show (Data initialDefinition) = "Data " ++ show initialDefinition
   show (Function args returns) = show args ++ show returns
   show (Union forms) = "Union " ++ show forms
@@ -24,11 +24,11 @@ Show MinimaType where
 
 mutual
   eq : MinimaType -> MinimaType -> Bool
-  eq (Bound a) (Bound b) = a == b
+  eq (Named a) (Named b) = a == b
   eq (Data a) (Data b) = a == b
   eq (Function args1 rets1) (Function args2 rets2) = allEq args1 args2 && eq rets1 rets2
   eq (Union as) (Union bs) = allEq as bs
-  eq (Unbound a) (Unbound b) = True
+  eq (Unbound a) (Unbound b) = a == b
   eq _ _ = False
 
   allEq : List MinimaType -> List MinimaType -> Bool
