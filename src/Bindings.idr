@@ -15,6 +15,10 @@ lookupType i b = case lookup i b of
     Nothing => Unbound i
     (Just type) => type
 
+resolveType : MinimaType -> Bindings -> MinimaType
+resolveType (Named introduction) bindings = lookupType introduction bindings
+resolveType concrete _ = concrete
+
 mergeBindings : Bindings -> Bindings -> Bindings
 mergeBindings a b = a ++ b
 
