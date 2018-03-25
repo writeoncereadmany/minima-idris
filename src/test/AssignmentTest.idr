@@ -17,6 +17,9 @@ yieldsTypeError error = assertLeft [error]
 yieldsTypeErrors : (Show b) => List TypeError -> Either TypeErrors b -> IO ()
 yieldsTypeErrors errors = assertLeft errors
 
+yieldsBindings : (Show a) => Bindings -> Either a Bindings -> IO ()
+yieldsBindings bindings = assertRight bindings
+
 canAssignDataToItself : IO ()
 canAssignDataToItself =
         typechecks
@@ -145,6 +148,35 @@ cannotAssignFunctionWhereSourceReturnsSupertypeOfTargetReturn =
      in yieldsTypeError "Cannot assign (0, 1) to (0, 0)"
         $ [] |=> verify ->? id
 
+canAssignGenericFunctionToSpecificFunctionIfUnboundArgsLineUp : IO ()
+canAssignGenericFunctionToSpecificFunctionIfUnboundArgsLineUp =
+    let string = Data (0, 0)
+        number = Data (0, 1)
+        a = Unbound (0, 2)
+        b = Unbound (0, 3)
+        concrete = Function [string, number] number
+        parametric = Function [a, b] b
+     in typechecks
+        $ [] |=> parametric ->? concrete
+
+cannotAssignGenericFunctionToSpecificFunctionIfUnboundArgsDoNotLineUp : IO ()
+cannotAssignGenericFunctionToSpecificFunctionIfUnboundArgsDoNotLineUp =
+    let string = Data (0, 0)
+        number = Data (0, 1)
+        a = Unbound (0, 2)
+        b = Unbound (0, 3)
+        concrete = Function [string, number] number
+        parametric = Function [a, b] a
+     in yieldsTypeError "Cannot assign (0, 0) to (0, 1)"
+        $ [] |=> parametric ->? concrete
+
+assigningArgsYieldsNewBindings : IO ()
+assigningArgsYieldsNewBindings =
+    let string = Data (0, 0)
+        a = Bound (0, 1)
+     in yieldsBindings [((0, 1), string)]
+        $ assignArgs [] [a] [string]
+
 cases : IO ()
 cases = do putStrLn "  ** Test suite AssignmentTest2: "
            canAssignDataToItself
@@ -162,3 +194,6 @@ cases = do putStrLn "  ** Test suite AssignmentTest2: "
            cannotAssignFunctionWhereSourceArgSubtypeOfTargetArg
            canAssignFunctionWhereSourceReturnsSubtypeOfTargetReturn
            cannotAssignFunctionWhereSourceReturnsSupertypeOfTargetReturn
+           canAssignGenericFunctionToSpecificFunctionIfUnboundArgsLineUp
+           cannotAssignGenericFunctionToSpecificFunctionIfUnboundArgsDoNotLineUp
+           assigningArgsYieldsNewBindings

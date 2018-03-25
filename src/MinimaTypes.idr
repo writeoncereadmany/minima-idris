@@ -8,14 +8,14 @@ DeBruijnIndex : Type
 DeBruijnIndex = (Integer, Integer)
 
 -- by having types refer to other types, type synthesis is no biggie
-data MinimaType2 : Type where
-  Bound : (refersTo : DeBruijnIndex) -> MinimaType2
-  Data : (initialDefinition : DeBruijnIndex) -> MinimaType2
-  Function : (args : List MinimaType2) -> (returns : MinimaType2) -> MinimaType2
-  Union : (forms : List MinimaType2) -> MinimaType2
-  Unbound : (introduction : DeBruijnIndex) -> MinimaType2
+data MinimaType : Type where
+  Bound : (refersTo : DeBruijnIndex) -> MinimaType
+  Data : (initialDefinition : DeBruijnIndex) -> MinimaType
+  Function : (args : List MinimaType) -> (returns : MinimaType) -> MinimaType
+  Union : (forms : List MinimaType) -> MinimaType
+  Unbound : (introduction : DeBruijnIndex) -> MinimaType
 
-Show MinimaType2 where
+Show MinimaType where
   show (Bound refersTo) = "Bound " ++ show refersTo
   show (Data initialDefinition) = "Data " ++ show initialDefinition
   show (Function args returns) = show args ++ show returns
@@ -23,7 +23,7 @@ Show MinimaType2 where
   show (Unbound introduction) = "Unbound " ++ show introduction
 
 mutual
-  eq : MinimaType2 -> MinimaType2 -> Bool
+  eq : MinimaType -> MinimaType -> Bool
   eq (Bound a) (Bound b) = a == b
   eq (Data a) (Data b) = a == b
   eq (Function args1 rets1) (Function args2 rets2) = allEq args1 args2 && eq rets1 rets2
@@ -31,11 +31,11 @@ mutual
   eq (Unbound a) (Unbound b) = True
   eq _ _ = False
 
-  allEq : List MinimaType2 -> List MinimaType2 -> Bool
+  allEq : List MinimaType -> List MinimaType -> Bool
   allEq [] [] = True
   allEq [] __ = False
   allEq __ [] = False
   allEq (x :: xs) (y :: ys) = eq x y && allEq xs ys
 
-Eq MinimaType2 where
+Eq MinimaType where
   (==) = eq

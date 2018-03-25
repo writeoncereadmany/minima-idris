@@ -4,23 +4,23 @@ import MinimaTypes
 
 %access public export
 
-Binding2 : Type
-Binding2 = (DeBruijnIndex, MinimaType2)
+Binding : Type
+Binding = (DeBruijnIndex, MinimaType)
 
-Bindings2 : Type
-Bindings2 = List Binding2
+Bindings : Type
+Bindings = List Binding
 
-lookupType : DeBruijnIndex -> Bindings2 -> MinimaType2
+lookupType : DeBruijnIndex -> Bindings -> MinimaType
 lookupType i b = case lookup i b of
     Nothing => Unbound i
     (Just type) => type
 
-mergeBindings : Bindings2 -> Bindings2 -> Bindings2
-mergeBindings a b = a
+mergeBindings : Bindings -> Bindings -> Bindings
+mergeBindings a b = a ++ b
 
-mergeAll : List Bindings2 -> Bindings2
+mergeAll : List Bindings -> Bindings
 mergeAll bindings = foldl mergeBindings [] bindings
 
 infixl 4 |=>
-interface WithBindings2 a b | a where
-  (|=>) : Bindings2 -> a -> b
+interface WithBindings a b | a where
+  (|=>) : Bindings -> a -> b
