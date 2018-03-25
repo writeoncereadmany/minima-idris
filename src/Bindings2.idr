@@ -15,6 +15,9 @@ lookupType i b = case lookup i b of
     Nothing => Unbound i
     (Just type) => type
 
+mergeBindings : Bindings2 -> Bindings2 -> Bindings2
+mergeBindings a b = a
+
 infixl 4 |=>
 interface WithBindings2 a b | a where
   (|=>) : Bindings2 -> a -> b
