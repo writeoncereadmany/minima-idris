@@ -9,6 +9,8 @@ DeBruijnIndex = (Integer, Integer)
 
 -- by having types refer to other types, type synthesis is no biggie
 data MinimaType : Type where
+  Anything : MinimaType
+  Nothing : MinimaType
   Named : (introduction : DeBruijnIndex) -> MinimaType
   Data : (initialDefinition : DeBruijnIndex) -> MinimaType
   Function : (args : List MinimaType) -> (returns : MinimaType) -> MinimaType
@@ -16,6 +18,8 @@ data MinimaType : Type where
   Unbound : (introduction : DeBruijnIndex) -> MinimaType
 
 Show MinimaType where
+  show Anything = "Anything"
+  show Nothing = "Nothing"
   show (Named refersTo) = "Named " ++ show refersTo
   show (Data initialDefinition) = "Data " ++ show initialDefinition
   show (Function args returns) = show args ++ " => " ++ show returns
@@ -24,6 +28,8 @@ Show MinimaType where
 
 mutual
   eq : MinimaType -> MinimaType -> Bool
+  eq Anything Anything = True
+  eq Nothing Nothing = True
   eq (Named a) (Named b) = a == b
   eq (Data a) (Data b) = a == b
   eq (Function args1 rets1) (Function args2 rets2) = allEq args1 args2 && eq rets1 rets2
@@ -41,11 +47,13 @@ Eq MinimaType where
   (==) = eq
 
 constructorIndex : MinimaType -> Int
-constructorIndex (Named _) = 0
-constructorIndex (Data _) = 1
-constructorIndex (Function _ _) = 2
-constructorIndex (Union _) = 3
-constructorIndex (Unbound _) = 4
+constructorIndex Anything = 0
+constructorIndex Nothing = 1
+constructorIndex (Named _) = 2
+constructorIndex (Data _) = 3
+constructorIndex (Function _ _) = 4
+constructorIndex (Union _) = 5
+constructorIndex (Unbound _) = 6
 
 mutual
   compareLists : List MinimaType -> List MinimaType -> Ordering
@@ -57,6 +65,8 @@ mutual
     diff => diff
 
   Ord MinimaType where
+    compare Anything Anything = EQ
+    compare Nothing Nothing = EQ
     compare (Named a) (Named b) = compare a b
     compare (Data a) (Data b) = compare a b
     compare (Function argsa reta) (Function argsb retb) = case compareLists argsa argsb of

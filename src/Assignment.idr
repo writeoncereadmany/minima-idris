@@ -51,6 +51,12 @@ mutual
   assignTo bindings (Named a) b = bindings |=> lookupType a bindings ->? b
   assignTo bindings a (Named b) = bindings |=> a ->? lookupType b bindings
 
+  assignTo bindings _ Anything = Right bindings
+  assignTo bindings Anything b = Left ["Cannot assign Anything to " ++ show b]
+
+  assignTo bindings Nothing _ = Right bindings
+  assignTo bindings a Nothing = Left ["Cannot assign " ++ show a ++ " to Nothing"]
+
   assignTo bindings (Union srcs) tgt = assignUnionTo bindings srcs tgt
   assignTo bindings src (Union tgts) = assignToUnion bindings src tgts
 
