@@ -6,9 +6,12 @@ modules = MinimaTypes
         , TypeErrors
         , Assignment
         , Call
+        , Unification
         , test.Assertions
         , test.AssignmentTest
         , test.CallTest
+        , test.UnificationTest
 
 tests = AssignmentTest.cases
       , CallTest.cases
+      , UnificationTest.cases
