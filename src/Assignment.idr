@@ -1,7 +1,7 @@
-module Assignment2
+module Assignment
 
-import Bindings2
-import MinimaTypes2
+import Bindings
+import MinimaTypes
 import TypeErrors
 
 %access public export

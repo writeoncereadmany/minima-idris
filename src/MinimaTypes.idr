@@ -1,4 +1,4 @@
-module MinimaTypes2
+module MinimaTypes
 
 %access public export
 

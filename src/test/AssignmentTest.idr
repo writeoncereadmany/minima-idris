@@ -1,9 +1,9 @@
-module AssignmentTest2
+module AssignmentTest
 
 import test.Assertions
-import MinimaTypes2
-import Bindings2
-import Assignment2
+import MinimaTypes
+import Bindings
+import Assignment
 import TypeErrors
 
 %access export

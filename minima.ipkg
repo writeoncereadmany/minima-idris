@@ -1,11 +1,11 @@
 package minima
 
 sourcedir = src
-modules = MinimaTypes2
-        , Bindings2
+modules = MinimaTypes
+        , Bindings
         , TypeErrors
-        , Assignment2
+        , Assignment
         , test.Assertions
-        , test.AssignmentTest2
+        , test.AssignmentTest
 
-tests = AssignmentTest2.cases
+tests = AssignmentTest.cases
