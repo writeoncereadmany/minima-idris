@@ -6,15 +6,15 @@ import TypeErrors
 
 %access public export
 
-data AssOp2 = Assignment MinimaType MinimaType
+data AssOp = Assignment MinimaType MinimaType
 infixl 8 ->?
-(->?) : MinimaType -> MinimaType -> AssOp2
+(->?) : MinimaType -> MinimaType -> AssOp
 (->?) = Assignment
 
 data JustFunction = JFunction (List MinimaType) MinimaType
 
 mutual
-  WithBindings AssOp2 (Either TypeErrors Bindings) where
+  WithBindings AssOp (Either TypeErrors Bindings) where
     (|=>) bindings (Assignment src tgt) = assignTo bindings src tgt
 
   assignArgs : Bindings -> List MinimaType -> List MinimaType -> Either TypeErrors Bindings

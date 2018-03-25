@@ -5,7 +5,10 @@ modules = MinimaTypes
         , Bindings
         , TypeErrors
         , Assignment
+        , Call
         , test.Assertions
         , test.AssignmentTest
+        , test.CallTest
 
 tests = AssignmentTest.cases
+      , CallTest.cases

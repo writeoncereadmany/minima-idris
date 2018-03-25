@@ -18,7 +18,7 @@ data MinimaType : Type where
 Show MinimaType where
   show (Named refersTo) = "Named " ++ show refersTo
   show (Data initialDefinition) = "Data " ++ show initialDefinition
-  show (Function args returns) = show args ++ show returns
+  show (Function args returns) = show args ++ " => " ++ show returns
   show (Union forms) = "Union " ++ show forms
   show (Unbound introduction) = "Unbound " ++ show introduction
 

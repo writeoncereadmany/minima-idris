@@ -164,7 +164,7 @@ assigningArgsYieldsNewBindings =
         $ assignArgs [] [a] [string]
 
 cases : IO ()
-cases = do putStrLn "  ** Test suite AssignmentTest2: "
+cases = do putStrLn "  ** Test suite AssignmentTest: "
            canAssignDataToItself
            cannotAssignDataToOtherData
            canAssignDataToItsAlias
