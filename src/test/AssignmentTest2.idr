@@ -86,14 +86,64 @@ canAssignFunctionToItself =
      in typechecks
         $ [] |=> plus ->? plus
 
-cannotAssingFunctionWhereArgumentsDiffer : IO ()
-cannotAssingFunctionWhereArgumentsDiffer =
+cannotAssignFunctionWhereArgumentsDiffer : IO ()
+cannotAssignFunctionWhereArgumentsDiffer =
     let number = Data (0, 0)
         string = Data (0, 1)
         id = Function [number] number
         length = Function [string] number
      in yieldsTypeError "Cannot assign (0, 1) to (0, 0)"
         $ [] |=> id ->? length
+
+cannotAssignFunctionWhereReturnTypesDiffer : IO ()
+cannotAssignFunctionWhereReturnTypesDiffer =
+    let number = Data (0, 0)
+        string = Data (0, 1)
+        id = Function [number] number
+        toString = Function [number] string
+     in yieldsTypeError "Cannot assign (0, 0) to (0, 1)"
+        $ [] |=> id ->? toString
+
+canAssignFunctionWhereSourceArgSupertypeOfTargetArg : IO ()
+canAssignFunctionWhereSourceArgSupertypeOfTargetArg =
+    let string = Data (0, 0)
+        nothing = Data (0, 1)
+        maybeString = Union [string, nothing]
+        id = Function [string] string
+        maybeShow = Function [maybeString] string
+     in typechecks
+        $ [] |=> maybeShow ->? id
+
+cannotAssignFunctionWhereSourceArgSubtypeOfTargetArg : IO ()
+cannotAssignFunctionWhereSourceArgSubtypeOfTargetArg =
+    let string = Data (0, 0)
+        nothing = Data (0, 1)
+        maybeString = Union [string, nothing]
+        id = Function [string] string
+        maybeShow = Function [maybeString] string
+     in yieldsTypeError "Cannot assign (0, 1) to (0, 0)"
+        $ [] |=> id ->? maybeShow
+
+canAssignFunctionWhereSourceReturnsSubtypeOfTargetReturn : IO ()
+canAssignFunctionWhereSourceReturnsSubtypeOfTargetReturn =
+    let string = Data (0, 0)
+        nothing = Data (0, 1)
+        maybeString = Union [string, nothing]
+        id = Function [string] string
+        verify = Function [string] maybeString
+     in typechecks
+        $ [] |=> id ->? verify
+
+
+cannotAssignFunctionWhereSourceReturnsSupertypeOfTargetReturn : IO ()
+cannotAssignFunctionWhereSourceReturnsSupertypeOfTargetReturn =
+    let string = Data (0, 0)
+        nothing = Data (0, 1)
+        maybeString = Union [string, nothing]
+        id = Function [string] string
+        verify = Function [string] maybeString
+     in yieldsTypeError "Cannot assign (0, 1) to (0, 0)"
+        $ [] |=> verify ->? id
 
 cases : IO ()
 cases = do putStrLn "  ** Test suite AssignmentTest2: "
@@ -106,4 +156,9 @@ cases = do putStrLn "  ** Test suite AssignmentTest2: "
            canAssignUnionToLargerUnion
            cannotAssignUnionToSmallerUnion
            canAssignFunctionToItself
-           cannotAssingFunctionWhereArgumentsDiffer
+           cannotAssignFunctionWhereArgumentsDiffer
+           cannotAssignFunctionWhereReturnTypesDiffer
+           canAssignFunctionWhereSourceArgSupertypeOfTargetArg
+           cannotAssignFunctionWhereSourceArgSubtypeOfTargetArg
+           canAssignFunctionWhereSourceReturnsSubtypeOfTargetReturn
+           cannotAssignFunctionWhereSourceReturnsSupertypeOfTargetReturn
