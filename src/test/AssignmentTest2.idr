@@ -79,6 +79,21 @@ cannotAssignUnionToSmallerUnion =
      in yieldsTypeErrors ["Cannot assign (0, 1) to (0, 0)", "Cannot assign (0, 1) to (0, 2)"]
         $ [] |=> maybeStringOrNumber ->? maybeString
 
+canAssignFunctionToItself : IO ()
+canAssignFunctionToItself =
+    let number = Data (0, 0)
+        plus = Function [number, number] number
+     in typechecks
+        $ [] |=> plus ->? plus
+
+cannotAssingFunctionWhereArgumentsDiffer : IO ()
+cannotAssingFunctionWhereArgumentsDiffer =
+    let number = Data (0, 0)
+        string = Data (0, 1)
+        id = Function [number] number
+        length = Function [string] number
+     in yieldsTypeError "Cannot assign (0, 1) to (0, 0)"
+        $ [] |=> id ->? length
 
 cases : IO ()
 cases = do putStrLn "  ** Test suite AssignmentTest2: "
@@ -90,3 +105,5 @@ cases = do putStrLn "  ** Test suite AssignmentTest2: "
            cannotAssignUnionToMemberOfUnion
            canAssignUnionToLargerUnion
            cannotAssignUnionToSmallerUnion
+           canAssignFunctionToItself
+           cannotAssingFunctionWhereArgumentsDiffer

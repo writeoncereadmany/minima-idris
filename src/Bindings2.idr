@@ -18,6 +18,9 @@ lookupType i b = case lookup i b of
 mergeBindings : Bindings2 -> Bindings2 -> Bindings2
 mergeBindings a b = a
 
+mergeAll : List Bindings2 -> Bindings2
+mergeAll bindings = foldl mergeBindings [] bindings
+
 infixl 4 |=>
 interface WithBindings2 a b | a where
   (|=>) : Bindings2 -> a -> b
