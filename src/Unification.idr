@@ -13,42 +13,42 @@ infixl 8 |?
 (|?) = Unify
 
 mutual
-  WithBindings UnificationOp (Either TypeErrors MinimaType) where
+  WithBindings UnificationOp MinimaType where
     (|=>) bindings (Unify a b) = unify bindings a b
 
-  unify : Bindings -> MinimaType -> MinimaType -> Either TypeErrors MinimaType
+  unify : Bindings -> MinimaType -> MinimaType -> MinimaType
   -- either x or anything can be anything
-  unify b Anything _ = Right Anything
-  unify b _ Anything = Right Anything
+  unify b Anything _ = Anything
+  unify b _ Anything = Anything
 
   -- note: this isn't just a dodge. Nothing is the return type of a recursive
   -- path, so unifying it with a valid return type is something which frequently
   -- does occur. If something either returns a String, or doesn't return, then
   -- every time it returns, it returns a String.
-  unify b Nothing y = Right y
-  unify b x Nothing = Right x
+  unify b Nothing y = y
+  unify b x Nothing = x
 
   -- shortcut the unification if they're the same name
   unify b nx@(Named x) ny@(Named y) = if x == y
-    then Right nx
+    then nx
     else b |=> lookupType x b |? ny
   unify b (Named x) y = b |=> lookupType x b |? y
   unify b x (Named y) = b |=> x |? lookupType y b
 
-  unify b (Unbound x) (Unbound y) = Right (Unbound x)
-  unify b (Unbound _) y = Right y
-  unify b x (Unbound _) = Right x
+  unify b (Unbound x) (Unbound y) = Unbound x
+  unify b (Unbound _) y = y
+  unify b x (Unbound _) = x
 
-  unify b (Union xs) (Union ys) = Right $ Union $ sort $ union xs ys
+  unify b (Union xs) (Union ys) = Union $ sort $ union xs ys
   unify b x@(Union _) y = b |=> x |? Union [y]
   unify b x y@(Union _) = b |=> Union [x] |? y
 
   unify b dx@(Data x) dy@(Data y) = if x == y
-    then Right dx
-    else Right $ Union [dx, dy]
+    then dx
+    else Union [dx, dy]
 
-  unify b (Function argsa reta) (Function argsb retb) = do returns <- b |=> reta |? retb
-                                                           pure $ Function argsa returns
+  unify b (Function argsa reta) (Function argsb retb) = let returns = b |=> reta |? retb
+                                                         in Function argsa returns
   -- if we get here, the types are disjoint: create a union of the two types
   unify b x y = b |=> Union [x] |? y
 
@@ -58,23 +58,17 @@ updateFirst ((ok, ov) :: xs) nk nv = if ok == nk
   then (nk, nv) :: xs
   else (ok, ov) :: updateFirst xs nk nv
 
-condense : Bindings -> Either TypeErrors Bindings
-condense [] = Right []
+condense : Bindings -> Bindings
+condense [] = []
 condense ((b, t1) :: xs) = case lookup b xs of
-   Nothing => do condensed <- condense xs
-                 pure ((b, t1) :: condensed)
+   Nothing => ((b, t1) :: condense xs)
    -- note here that in order to condense - ie normalise - bindings,
    -- we need bindings...
    -- This could get tricky wrt recursively-typed things.
-   (Just t2) => do unified <- [] |=> t1 |? t2
-                   condense $ updateFirst xs b unified
+   (Just t2) => condense $ updateFirst xs b ([] |=> t1 |? t2)
 
 unifyBindings : Bindings -> Bindings -> Bindings
-unifyBindings x y = case condense (x ++ y) of
-  (Left l) => ?do_we_need_this
-  (Right r) => r
+unifyBindings x y = condense (x ++ y)
 
 unifyAll : List Bindings -> Bindings
-unifyAll xs = case condense (join xs) of
-  (Left l) => ?do_we_need_this_2
-  (Right r) => r
+unifyAll xs = condense (join xs)

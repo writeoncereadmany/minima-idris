@@ -38,11 +38,11 @@ identity = Function [number] number
 stringOrShowNumber : MinimaType
 stringOrShowNumber = Union [string, showNumber]
 
-yieldsType : (Show a) => MinimaType -> Either a MinimaType -> IO ()
-yieldsType = assertRight
+yieldsType : MinimaType -> MinimaType -> IO ()
+yieldsType = assertEq
 
-yieldsBindings : (Show a) => Bindings -> Either a Bindings -> IO ()
-yieldsBindings = assertRight
+yieldsBindings : Bindings -> Bindings -> IO ()
+yieldsBindings = assertEq
 
 unifyingSameDatatypeYieldsThatDatatype : IO ()
 unifyingSameDatatypeYieldsThatDatatype =
