@@ -8,9 +8,21 @@ import TypeErrors
 
 data UnificationOp = Unify MinimaType MinimaType
 
+data IntersectionOp = Intersect MinimaType MinimaType
+
 infixl 8 |?
 (|?) : MinimaType -> MinimaType -> UnificationOp
 (|?) = Unify
+
+infixl 8 &?
+(&?) : MinimaType -> MinimaType -> IntersectionOp
+(&?) = Intersect
+
+overlap : (Eq a) => List a -> List a -> List a
+overlap [] ys = []
+overlap (x :: xs) ys = if elem x ys
+  then x :: overlap xs ys
+  else overlap xs ys
 
 mutual
   WithBindings UnificationOp MinimaType where
@@ -51,6 +63,36 @@ mutual
                                                          in Function argsa returns
   -- if we get here, the types are disjoint: create a union of the two types
   unify b x y = b |=> Union [x] |? y
+
+  WithBindings IntersectionOp MinimaType where
+    (|=>) bindings (Intersect a b) = intersect bindings a b
+
+  intersect : Bindings -> MinimaType -> MinimaType -> MinimaType
+
+  intersect b Anything y = y
+  intersect b x Anything = x
+
+  intersect b Nothing y = Nothing
+  intersect b x Nothing = Nothing
+
+  intersect b nx@(Named x) ny@(Named y) = if x == y
+    then nx
+    else b |=> lookupType x b &? ny
+  intersect b (Named x) y = b |=> lookupType x b &? y
+  intersect b x (Named y) = b |=> x &? lookupType y b
+
+  intersect b (Union xs) (Union ys) = case overlap xs ys of
+    [] => Nothing
+    [x] => x
+    xs => Union xs
+
+  intersect b dx@(Data x) dy@(Data y) = if x == y
+    then dx
+    else Nothing
+
+  intersect b (Function args returns) y = ?intersect_rhs_5
+
+  intersect b (Unbound introduction) y = ?intersect_rhs_7
 
 updateFirst : (Eq a) => List (a, b) -> a -> b -> List (a, b)
 updateFirst [] x y = []
