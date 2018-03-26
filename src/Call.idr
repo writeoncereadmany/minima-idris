@@ -4,6 +4,7 @@ import MinimaTypes
 import Bindings
 import TypeErrors
 import Assignment
+import Unification
 
 %access public export
 
@@ -20,5 +21,5 @@ mutual
   call b (Named loc) args = b |=> lookupType loc b $? args
   call b (Function params returns) args = case assignArgs b params args of
     (Left typeErrors) => Left typeErrors
-    (Right bindings) => Right $ resolveType returns $ mergeBindings b bindings
+    (Right bindings) => Right $ resolveType returns $ unifyBindings b bindings
   call b notfun _ = Left ["Cannot call " ++ show notfun]

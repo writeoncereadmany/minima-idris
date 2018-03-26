@@ -19,12 +19,6 @@ resolveType : MinimaType -> Bindings -> MinimaType
 resolveType (Named introduction) bindings = lookupType introduction bindings
 resolveType concrete _ = concrete
 
-mergeBindings : Bindings -> Bindings -> Bindings
-mergeBindings a b = a ++ b
-
-mergeAll : List Bindings -> Bindings
-mergeAll bindings = foldl mergeBindings [] bindings
-
 infixl 4 |=>
 interface WithBindings a b | a where
   (|=>) : Bindings -> a -> b
