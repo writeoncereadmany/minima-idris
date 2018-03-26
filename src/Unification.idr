@@ -59,8 +59,11 @@ mutual
     then dx
     else Union [dx, dy]
 
-  unify b (Function argsa reta) (Function argsb retb) = let returns = b |=> reta |? retb
-                                                         in Function argsa returns
+  unify b (Function argsa reta) (Function argsb retb) = if length argsa /= length argsb
+    then Nothing
+    else let args = zipWith (intersect b) argsa argsb
+             returns = b |=> reta |? retb
+          in Function args returns
   -- if we get here, the types are disjoint: create a union of the two types
   unify b x y = b |=> Union [x] |? y
 
@@ -90,7 +93,11 @@ mutual
     then dx
     else Nothing
 
-  intersect b (Function args returns) y = ?intersect_rhs_5
+  intersect b (Function argsa reta) (Function argsb retb) = if length argsa /= length argsb
+    then Nothing
+    else let args = zipWith (unify b) argsa argsb
+             returns = b |=> reta &? retb
+          in Function args returns
 
   intersect b (Unbound introduction) y = ?intersect_rhs_7
 

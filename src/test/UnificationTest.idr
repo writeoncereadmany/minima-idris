@@ -74,6 +74,11 @@ unifyingFunctionsWithDifferentReturnTypesYieldsFunctionWithUnionReturnType =
       yieldsType (Function [number] stringOrNumber)
       $ [] |=> showNumber |? identity
 
+unifyingFunctionsWithDifferentArgumentTypesYieldsIntersectionOfArgumentTypes : IO ()
+unifyingFunctionsWithDifferentArgumentTypesYieldsIntersectionOfArgumentTypes =
+      yieldsType (Function [string] string)
+      $ [] |=> Function [maybeString] string |? Function [stringOrNumber] string
+
 nonOverlappingBindingsCondenseToSameBindings : IO ()
 nonOverlappingBindingsCondenseToSameBindings =
       yieldsBindings [((0, 0), string), ((0, 1), number)]
@@ -100,3 +105,4 @@ cases = do putStrLn "  ** Test suite UnificationTest: "
            multipleRedefinitionsCondenseToSingleDefinition
            unifyingDataAndFunctionsYieldsUnion
            unifyingFunctionsWithDifferentReturnTypesYieldsFunctionWithUnionReturnType
+           unifyingFunctionsWithDifferentArgumentTypesYieldsIntersectionOfArgumentTypes
