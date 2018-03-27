@@ -7,52 +7,55 @@ import Minima.AST
 
 %access public export
 
+Exp : Type
+Exp = Expression ()
+
 identifier : Parser String
 identifier = pack <$> lexeme (some letter)
 
-variable : Parser Expression
-variable = Variable <$> identifier
+variable : Parser Exp
+variable = Variable () <$> identifier
 
-number : Parser Expression
+number : Parser Exp
 number = do val <- lexeme integer
-            pure $ NumberLiteral val
+            pure $ (NumberLiteral () val)
 
-string : Parser Expression
-string = StringLiteral <$> quoted '''
+string : Parser Exp
+string = StringLiteral () <$> quoted '''
 
 list : Parser a -> Parser (List a)
 list elem = sepBy elem (token ",")
 
 mutual
-  definition : Parser Expression
+  definition : Parser Exp
   definition = do name <- lexeme identifier
                   token "is"
                   value <- expression
-                  pure $ Definition name value
+                  pure $ Definition () name value
 
-  function : Parser Expression
+  function : Parser Exp
   function = do args <- lexeme $ between (char '[') (char ']') (list identifier)
                 token "=>"
                 body <- expression
-                pure $ Function args body
+                pure $ Function () args body
 
-  argList : Parser (List Expression)
+  argList : Parser (List Exp)
   argList = do char '['
                args <- commitTo $ list expression
                char ']'
                pure args
 
-  call : Parser (Expression -> Expression)
+  call : Parser (Exp -> Exp)
   call = do args <- argList
-            pure $ flip Call args
+            pure $ flip (Call ()) args
 
-  group : Parser Expression
+  group : Parser Exp
   group = do char '('
              expressions <- commitTo $ list expression
              char ')'
-             pure $ Group expressions
+             pure $ Group () expressions
 
-  fragment : Parser Expression
+  fragment : Parser Exp
   fragment = number
          <|> definition
          <|> string
@@ -60,12 +63,12 @@ mutual
          <|> variable
          <|> function
 
-  expression : Parser Expression
+  expression : Parser Exp
   expression = do exp <- fragment
                   operations <- many call
                   pure $ foldl (\ex => \f => f ex) exp operations
 
-program : Parser (List Expression)
+program : Parser (List Exp)
 program = do spaces
              expressions <- list expression
              eof

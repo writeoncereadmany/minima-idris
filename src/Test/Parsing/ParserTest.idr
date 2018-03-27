@@ -28,35 +28,35 @@ specs = spec $ do
     it "Cannot parse a naked bang" $ do
       cannot $ parse expression "!"
     it "Parse a variable" $ do
-      parse expression "foo" \@/ Variable "foo"
+      parse expression "foo" \@/ Variable () "foo"
     it "Parse a number" $ do
-      parse expression "12" \@/ NumberLiteral 12
+      parse expression "12" \@/ NumberLiteral () 12
     it "Parse a string" $ do
-      parse expression "'cheeseburger'" \@/ StringLiteral "cheeseburger"
+      parse expression "'cheeseburger'" \@/ StringLiteral () "cheeseburger"
     it "Parse a definition" $ do
-      parse expression "foo is 12" \@/ Definition "foo" (NumberLiteral 12)
+      parse expression "foo is 12" \@/ Definition () "foo" (NumberLiteral () 12)
     it "Parse a function" $ do
-      parse expression "[a, b] => 'shufflepants'" \@/ Function ["a", "b"] (StringLiteral "shufflepants")
+      parse expression "[a, b] => 'shufflepants'" \@/ Function () ["a", "b"] (StringLiteral () "shufflepants")
     it "Parse a call" $ do
-      parse expression "foo[bar]" \@/ Call (Variable "foo") [Variable "bar"]
+      parse expression "foo[bar]" \@/ Call () (Variable () "foo") [Variable () "bar"]
     it "Parse a group" $ do
-      parse expression "(12, 'hello', foo)" \@/ Group [NumberLiteral 12, StringLiteral "hello", Variable "foo"]
+      parse expression "(12, 'hello', foo)" \@/ Group () [NumberLiteral () 12, StringLiteral () "hello", Variable () "foo"]
     it "Parse chained call" $ do
-      parse expression "foo[bar][baz]" \@/ Call (Call (Variable "foo") [Variable "bar"]) [Variable "baz"]
+      parse expression "foo[bar][baz]" \@/ Call () (Call () (Variable () "foo") [Variable () "bar"]) [Variable () "baz"]
     it "Can nest calls" $ do
-      parse expression "foo[bar[baz]]" \@/ Call (Variable "foo") [Call (Variable "bar") [Variable "baz"]]
+      parse expression "foo[bar[baz]]" \@/ Call () (Variable () "foo") [Call () (Variable () "bar") [Variable () "baz"]]
 
 
   describe "Can parse programs" $ do
     it "Can parse an empty program" $ do
       parse program "" \@/ []
     it "Can parse program with single expression" $ do
-      parse program "foo" \@/ [Variable "foo"]
+      parse program "foo" \@/ [Variable () "foo"]
     it "Can parse program with single expression encased in whitespace" $ do
-      parse program "    foo    " \@/ [Variable "foo"]
+      parse program "    foo    " \@/ [Variable () "foo"]
     it "Cannot parse program with random crap at the end" $ do
       cannot $ parse program "foo bar"
     it "Can parse program with multiple expressions" $ do
-      parse program "foo, bar" \@/ [Variable "foo", Variable "bar"]
+      parse program "foo, bar" \@/ [Variable () "foo", Variable () "bar"]
     it "Can parse program with multiple expressions separated by whitespace" $ do
-      parse program "   foo   ,  bar   " \@/ [Variable "foo", Variable "bar"]
+      parse program "   foo   ,  bar   " \@/ [Variable () "foo", Variable () "bar"]
