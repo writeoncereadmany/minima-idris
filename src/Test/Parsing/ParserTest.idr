@@ -63,4 +63,4 @@ specs = spec $ do
     it "Can parse program with multiple expressions" $ do
       parse program "foo, bar" \@/ [Variable pos "foo", Variable pos "bar"]
     it "Can parse program with multiple expressions separated by whitespace" $ do
-      parse program "   foo   ,  bar   " \@/ [Variable pos "foo", Variable pos "bar"]
+      parse program "   foo   ,\n  bar   " \@/ [Variable pos "foo", Variable pos "bar"]
