@@ -39,3 +39,7 @@ specs = spec $ do
       parse expression "[a, b] => 'shufflepants'" \@/ Function ["a", "b"] (StringLiteral "shufflepants")
     it "Parse a call" $ do
       parse expression "foo[bar]" \@/ Call (Variable "foo") [Variable "bar"]
+    it "Parse a group" $ do
+      parse expression "(12, 'hello', foo)" \@/ Group [NumberLiteral 12, StringLiteral "hello", Variable "foo"]
+    it "Parse chained call" $ do
+      parse expression "foo[bar][baz]" \@/ Call (Call (Variable "foo") [Variable "bar"]) [Variable "baz"]
