@@ -10,11 +10,10 @@ modules = MinimaTypes
         , Assignment
         , Call
         , Unification
-        , test.Assertions
         , test.AssignmentTest
         , test.CallTest
         , test.UnificationTest
 
-tests = AssignmentTest.cases
+tests = AssignmentTest.specs
       , CallTest.specs
       , UnificationTest.specs

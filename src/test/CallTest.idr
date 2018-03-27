@@ -5,7 +5,6 @@ import Bindings
 import TypeErrors
 import Call
 import Specdris.Spec
-import test.Assertions
 
 %access export
 

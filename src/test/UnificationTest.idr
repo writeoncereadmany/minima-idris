@@ -1,6 +1,5 @@
 module UnificationTest
 
-import test.Assertions
 import MinimaTypes
 import TypeErrors
 import Bindings

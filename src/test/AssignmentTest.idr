@@ -1,24 +1,27 @@
 module AssignmentTest
 
-import test.Assertions
 import MinimaTypes
 import Bindings
 import Assignment
 import TypeErrors
+import Specdris.Spec
 
 %access export
 
-typechecks : (Show b) => Either TypeErrors b -> IO ()
-typechecks = assertIsRight
+typechecksWhen : Show b => Either TypeErrors b -> SpecResult
+typechecksWhen (Left errors) = UnaryFailure errors $ "should have typechecked"
+typechecksWhen (Right _) = Success
 
-yieldsTypeError : (Show b) => TypeError -> Either TypeErrors b -> IO ()
-yieldsTypeError error = assertLeft [error]
+yieldsTypeErrors : Show b => (actual : Either TypeErrors b) -> (expected : TypeErrors) -> SpecResult
+yieldsTypeErrors (Left errors) expected = errors === expected
+yieldsTypeErrors (Right bindings) expected = UnaryFailure bindings $ "should have yielded type error: " ++ show expected
 
-yieldsTypeErrors : (Show b) => List TypeError -> Either TypeErrors b -> IO ()
-yieldsTypeErrors errors = assertLeft errors
+yieldsTypeError : Show b => (actual : Either TypeErrors b) -> (expected : TypeError) -> SpecResult
+yieldsTypeError actual expected = yieldsTypeErrors actual [expected]
 
-yieldsBindings : (Show a) => Bindings -> Either a Bindings -> IO ()
-yieldsBindings bindings = assertRight bindings
+yieldsBindings : Show a => (actual : Either a Bindings) -> (expected : Bindings) -> SpecResult
+yieldsBindings (Left errors) expected = UnaryFailure errors $ "should have yielded bindings" ++ show expected
+yieldsBindings (Right actual) expected = actual === expected
 
 string : MinimaType
 string = Data (0, 0)
@@ -44,143 +47,75 @@ a = Named (0, 3)
 b : MinimaType
 b = Named (0, 4)
 
-canAssignDataToItself : IO ()
-canAssignDataToItself =
-        typechecks
-        $ [] |=> string ->? string
+specs : IO ()
+specs = spec $ do
+  describe "Datatype assignments" $ do
+    it "can assign data to itself" $ do
+      typechecksWhen $ [] |=> string ->? string
+    it "cannot assign data to other data" $ do
+      [] |=> string ->? number `yieldsTypeError` "Cannot assign (0, 0) to (0, 1)"
+    it "can assign data to its alias" $ do
+      let text = Named (1, 0)
+      let bindings = [((1, 0), string)]
+      typechecksWhen $ bindings |=> string ->? text
+    it "can assign alias to its root type" $ do
+      let text = Named (1, 0)
+      let bindings = [((1, 0), string)]
+      typechecksWhen $ bindings |=> text ->? string
+    it "assigning to unbound binds it" $ do
+      let param = Named (1, 0)
+      [] |=> string ->? param `yieldsBindings` [((1, 0), string)]
 
-cannotAssignDataToOtherData : IO ()
-cannotAssignDataToOtherData =
-        yieldsTypeError "Cannot assign (0, 0) to (0, 1)"
-        $ [] |=> string ->? number
+  describe "Union assignments" $ do
+    it "can assign member of union to union" $ do
+      typechecksWhen $ [] |=> string ->? maybeString
+    it "cannot assign union to member of union" $ do
+      [] |=> maybeString ->? string `yieldsTypeError` "Cannot assign (0, 2) to (0, 0)"
+    it "can assign union to larger union" $ do
+      typechecksWhen $ [] |=> maybeString ->? maybeStringOrNumber
+    it "cannot assign union to smaller union" $ do
+      [] |=> maybeStringOrNumber ->? maybeString `yieldsTypeErrors` ["Cannot assign (0, 1) to (0, 0)", "Cannot assign (0, 1) to (0, 2)"]
 
-canAssignDataToItsAlias : IO ()
-canAssignDataToItsAlias =
-    let text = Named (1, 0)
-        bindings = [((1, 0), string)]
-     in typechecks
-        $ bindings |=> string ->? text
+  describe "Function assignments" $ do
+    it "can assign function to itself" $ do
+      let fun = Function [number, number] number
+      typechecksWhen $ [] |=> fun ->? fun
+    it "cannot assign functions where arguments differ" $ do
+      let id = Function [number] number
+      let length = Function [string] number
+      [] |=> id ->? length `yieldsTypeError` "Cannot assign (0, 0) to (0, 1)"
+    it "cannot assign functions where return types differ" $ do
+      let id = Function [number] number
+      let toString = Function [number] string
+      [] |=> id ->? toString `yieldsTypeError` "Cannot assign (0, 1) to (0, 0)"
 
-canAssignAliasToItsRootType : IO ()
-canAssignAliasToItsRootType =
-    let text = Named (1, 0)
-        bindings = [((1, 0), string)]
-     in typechecks
-        $ bindings |=> text ->? string
+  describe "Functions and subtyping" $ do
+    it "can assign function where source arg supertype of target arg" $ do
+      let id = Function [string] string
+      let showMaybe = Function [maybeString] string
+      typechecksWhen $ [] |=> showMaybe ->? id
+    it "cannot assign function where source arg subtype of target arg" $ do
+      let id = Function [string] string
+      let showMaybe = Function [maybeString] string
+      [] |=> id ->? showMaybe `yieldsTypeError` "Cannot assign (0, 2) to (0, 0)"
+    it "can assign function where source returns subtype of target return type" $ do
+      let id = Function [string] string
+      let verify = Function [string] maybeString
+      typechecksWhen $ [] |=> id ->? verify
+    it "cannot assign function where source returns supertype of target return type" $ do
+      let id = Function [string] string
+      let verify = Function [string] maybeString
+      [] |=> verify ->? id `yieldsTypeError` "Cannot assign (0, 2) to (0, 0)"
 
-assigningToUnboundBindsIt : IO ()
-assigningToUnboundBindsIt =
-    let param = Named (1, 0)
-     in yieldsBindings [((1, 0), string)]
-        $ [] |=> string ->? param
-
-canAssignMemberOfUnionToUnion : IO ()
-canAssignMemberOfUnionToUnion =
-        typechecks
-        $ [] |=> string ->? maybeString
-
-cannotAssignUnionToMemberOfUnion : IO ()
-cannotAssignUnionToMemberOfUnion =
-        yieldsTypeError "Cannot assign (0, 2) to (0, 0)"
-        $ [] |=> maybeString ->? string
-
-canAssignUnionToLargerUnion : IO ()
-canAssignUnionToLargerUnion =
-        typechecks
-        $ [] |=> maybeString ->? maybeStringOrNumber
-
-
-cannotAssignUnionToSmallerUnion : IO ()
-cannotAssignUnionToSmallerUnion =
-        yieldsTypeErrors ["Cannot assign (0, 1) to (0, 0)", "Cannot assign (0, 1) to (0, 2)"]
-        $ [] |=> maybeStringOrNumber ->? maybeString
-
-canAssignFunctionToItself : IO ()
-canAssignFunctionToItself =
-    let plus = Function [number, number] number
-     in typechecks
-        $ [] |=> plus ->? plus
-
-cannotAssignFunctionWhereArgumentsDiffer : IO ()
-cannotAssignFunctionWhereArgumentsDiffer =
-    let id = Function [number] number
-        length = Function [string] number
-     in yieldsTypeError "Cannot assign (0, 0) to (0, 1)"
-        $ [] |=> id ->? length
-
-cannotAssignFunctionWhereReturnTypesDiffer : IO ()
-cannotAssignFunctionWhereReturnTypesDiffer =
-    let id = Function [number] number
-        toString = Function [number] string
-     in yieldsTypeError "Cannot assign (0, 1) to (0, 0)"
-        $ [] |=> id ->? toString
-
-canAssignFunctionWhereSourceArgSupertypeOfTargetArg : IO ()
-canAssignFunctionWhereSourceArgSupertypeOfTargetArg =
-    let id = Function [string] string
-        maybeShow = Function [maybeString] string
-     in typechecks
-        $ [] |=> maybeShow ->? id
-
-cannotAssignFunctionWhereSourceArgSubtypeOfTargetArg : IO ()
-cannotAssignFunctionWhereSourceArgSubtypeOfTargetArg =
-    let id = Function [string] string
-        maybeShow = Function [maybeString] string
-     in yieldsTypeError "Cannot assign (0, 2) to (0, 0)"
-        $ [] |=> id ->? maybeShow
-
-canAssignFunctionWhereSourceReturnsSubtypeOfTargetReturn : IO ()
-canAssignFunctionWhereSourceReturnsSubtypeOfTargetReturn =
-    let id = Function [string] string
-        verify = Function [string] maybeString
-     in typechecks
-        $ [] |=> id ->? verify
-
-
-cannotAssignFunctionWhereSourceReturnsSupertypeOfTargetReturn : IO ()
-cannotAssignFunctionWhereSourceReturnsSupertypeOfTargetReturn =
-    let id = Function [string] string
-        verify = Function [string] maybeString
-     in yieldsTypeError "Cannot assign (0, 2) to (0, 0)"
-        $ [] |=> verify ->? id
-
-canAssignGenericFunctionToSpecificFunctionIfUnboundArgsLineUp : IO ()
-canAssignGenericFunctionToSpecificFunctionIfUnboundArgsLineUp =
-    let concrete = Function [string, number] number
-        parametric = Function [a, b] b
-     in typechecks
-        $ [] |=> parametric ->? concrete
-
-cannotAssignGenericFunctionToSpecificFunctionIfUnboundArgsDoNotLineUp : IO ()
-cannotAssignGenericFunctionToSpecificFunctionIfUnboundArgsDoNotLineUp =
-    let concrete = Function [string, number] number
-        parametric = Function [a, b] a
-     in yieldsTypeError "Cannot assign (0, 0) to (0, 1)"
-        $ [] |=> parametric ->? concrete
-
-assigningArgsYieldsNewBindings : IO ()
-assigningArgsYieldsNewBindings =
-        yieldsBindings [((0, 3), string)]
-        $ assignArgs [] [a] [string]
-
-cases : IO ()
-cases = do putStrLn "  ** Test suite AssignmentTest: "
-           canAssignDataToItself
-           cannotAssignDataToOtherData
-           canAssignDataToItsAlias
-           canAssignAliasToItsRootType
-           assigningToUnboundBindsIt
-           canAssignMemberOfUnionToUnion
-           cannotAssignUnionToMemberOfUnion
-           canAssignUnionToLargerUnion
-           cannotAssignUnionToSmallerUnion
-           canAssignFunctionToItself
-           cannotAssignFunctionWhereArgumentsDiffer
-           cannotAssignFunctionWhereReturnTypesDiffer
-           canAssignFunctionWhereSourceArgSupertypeOfTargetArg
-           cannotAssignFunctionWhereSourceArgSubtypeOfTargetArg
-           canAssignFunctionWhereSourceReturnsSubtypeOfTargetReturn
-           cannotAssignFunctionWhereSourceReturnsSupertypeOfTargetReturn
-           canAssignGenericFunctionToSpecificFunctionIfUnboundArgsLineUp
-           cannotAssignGenericFunctionToSpecificFunctionIfUnboundArgsDoNotLineUp
-           assigningArgsYieldsNewBindings
+  describe "Parameteric functions" $ do
+    it "can assign generic function to concrete function if unbound args line up" $ do
+      let concrete = Function [string, number] number
+      let parametric = Function [a, b] b
+      typechecksWhen $ [] |=> parametric ->? concrete
+    it "cannot assign generic function to concrete function if unbound args to not line up" $ do
+      let concrete = Function [string, number] number
+      let parametric = Function [a, b] a
+      [] |=> parametric ->? concrete `yieldsTypeError` "Cannot assign (0, 0) to (0, 1)"
+    it "assigning args yields new bindings" $ do
+      let param = Named (1, 0)
+      assignArgs [] [param] [string] `yieldsBindings` [((1, 0), string)]
