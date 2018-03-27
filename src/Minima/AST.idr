@@ -29,18 +29,21 @@ Show (Expression a) where
   show (Group a xs) = "(" ++ joinWith ", " (show <$> xs) ++ ")"
 
 mutual
-  Eq a => Eq (Expression a) where
-    (==) (StringLiteral a x) (StringLiteral b y) = x == y
-    (==) (NumberLiteral a x) (NumberLiteral b y) = x == y
-    (==) (Variable a x) (Variable b y) = x == y
-    (==) (Definition a n1 e1) (Definition b n2 e2) = n1 == n2 && e1 == e2
-    (==) (Function a args1 body1) (Function b args2 body2) = args1 == args2 && body1 == body2
-    (==) (Call a fun1 args1) (Call b fun2 args2) = fun1 == fun2 && allEq args1 args2
-    (==) (Group a xs) (Group b ys) = allEq xs ys
-    (==) _ _ = False
+  eq : (a -> a -> Bool) -> Expression a -> Expression a -> Bool
+  eq f (StringLiteral a x) (StringLiteral b y) = f a b && x == y
+  eq f (NumberLiteral a x) (NumberLiteral b y) = f a b && x == y
+  eq f (Variable a x) (Variable b y) = f a b && x == y
+  eq f (Definition a n1 e1) (Definition b n2 e2) = f a b && n1 == n2 && eq f e1 e2
+  eq f (Function a args1 body1) (Function b args2 body2) = f a b && args1 == args2 && eq f body1 body2
+  eq f (Call a fun1 args1) (Call b fun2 args2) = f a b && eq f fun1 fun2 && allEq f args1 args2
+  eq f (Group a xs) (Group b ys) = f a b && allEq f xs ys
+  eq f _ _ = False
 
-  allEq : Eq a => List (Expression a) -> List (Expression a) -> Bool
-  allEq [] [] = True
-  allEq [] (x :: xs) = False
-  allEq (x :: xs) [] = False
-  allEq (x :: xs) (y :: ys) = x == y && allEq xs ys
+  allEq : (a -> a -> Bool) -> List (Expression a) -> List (Expression a) -> Bool
+  allEq f [] [] = True
+  allEq f [] (x :: xs) = False
+  allEq f (x :: xs) [] = False
+  allEq f (x :: xs) (y :: ys) = eq f x y && allEq f xs ys
+
+Eq a => Eq (Expression a) where
+  (==) = eq (==)

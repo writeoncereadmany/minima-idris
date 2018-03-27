@@ -3,41 +3,49 @@ module Parser
 import Lightyear
 import Lightyear.Strings
 import LightYear.Char
+import Lightyear.Position
 import Minima.AST
 
 %access public export
 
 Exp : Type
-Exp = Expression ()
+Exp = Expression Position
 
 identifier : Parser String
 identifier = pack <$> lexeme (some letter)
 
 variable : Parser Exp
-variable = Variable () <$> identifier
+variable = do pos <- getPosition
+              name <- identifier
+              pure $ Variable pos name
 
 number : Parser Exp
-number = do val <- lexeme integer
-            pure $ (NumberLiteral () val)
+number = do pos <- getPosition
+            val <- lexeme integer
+            pure $ NumberLiteral pos val
 
 string : Parser Exp
-string = StringLiteral () <$> quoted '''
+string = do pos <- getPosition
+            content <- quoted '''
+            pure $ StringLiteral pos content
 
 list : Parser a -> Parser (List a)
 list elem = sepBy elem (token ",")
 
 mutual
   definition : Parser Exp
-  definition = do name <- lexeme identifier
+  definition = do pos <- getPosition
+                  name <- lexeme identifier
                   token "is"
                   value <- expression
-                  pure $ Definition () name value
+                  pure $ Definition pos name value
 
   function : Parser Exp
-  function = do args <- lexeme $ between (char '[') (char ']') (list identifier)
+  function = do pos <- getPosition
+                args <- lexeme $ between (char '[') (char ']') (list identifier)
                 token "=>"
                 body <- expression
-                pure $ Function () args body
+                pure $ Function pos args body
 
   argList : Parser (List Exp)
   argList = do char '['
@@ -46,14 +54,16 @@ mutual
                pure args
 
   call : Parser (Exp -> Exp)
-  call = do args <- argList
-            pure $ flip (Call ()) args
+  call = do pos <- getPosition
+            args <- argList
+            pure $ flip (Call pos) args
 
   group : Parser Exp
-  group = do char '('
+  group = do pos <- getPosition
+             char '('
              expressions <- commitTo $ list expression
              char ')'
-             pure $ Group () expressions
+             pure $ Group pos expressions
 
   fragment : Parser Exp
   fragment = number
