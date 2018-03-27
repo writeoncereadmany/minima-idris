@@ -5,6 +5,7 @@ import MinimaTypes
 import TypeErrors
 import Bindings
 import Unification
+import Specdris.Spec
 
 %access export
 
@@ -93,6 +94,14 @@ overlappingBindingsCondenseToUnificationOfBindings : IO ()
 overlappingBindingsCondenseToUnificationOfBindings =
       yieldsBindings [((1, 0), maybeString)]
       $ condense [((1, 0), string), ((1, 0), nothing)]
+
+specs : IO ()
+specs = spec $ do
+  describe "Just making sure I can write some tests" $ do
+    it "Should pass" $ do
+      3 === 3
+    it "Should fail" $ do
+      2 + 2 === 5
 
 cases : IO ()
 cases = do putStrLn "  ** Test suite UnificationTest: "

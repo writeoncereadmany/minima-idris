@@ -1,6 +1,9 @@
 package minima
 
 sourcedir = src
+
+pkgs = specdris
+
 modules = MinimaTypes
         , Bindings
         , TypeErrors
@@ -15,3 +18,4 @@ modules = MinimaTypes
 tests = AssignmentTest.cases
       , CallTest.cases
       , UnificationTest.cases
+      , UnificationTest.specs
