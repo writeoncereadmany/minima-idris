@@ -1,9 +1,9 @@
 module Assignment
 
-import Bindings
-import MinimaTypes
-import TypeErrors
-import Unification
+import Minima.Types.Bindings
+import Minima.Types.MinimaTypes
+import Minima.Types.TypeErrors
+import Minima.Types.Unification
 
 %access public export
 

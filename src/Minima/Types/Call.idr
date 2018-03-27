@@ -1,10 +1,10 @@
 module Call
 
-import MinimaTypes
-import Bindings
-import TypeErrors
-import Assignment
-import Unification
+import Minima.Types.MinimaTypes
+import Minima.Types.Bindings
+import Minima.Types.TypeErrors
+import Minima.Types.Assignment
+import Minima.Types.Unification
 
 %access public export
 

@@ -1,9 +1,9 @@
 module AssignmentTest
 
-import MinimaTypes
-import Bindings
-import Assignment
-import TypeErrors
+import Minima.Types.MinimaTypes
+import Minima.Types.Bindings
+import Minima.Types.Assignment
+import Minima.Types.TypeErrors
 import Specdris.Spec
 
 %access export

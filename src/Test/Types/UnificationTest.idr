@@ -1,9 +1,9 @@
 module UnificationTest
 
-import MinimaTypes
-import TypeErrors
-import Bindings
-import Unification
+import Minima.Types.MinimaTypes
+import Minima.Types.TypeErrors
+import Minima.Types.Bindings
+import Minima.Types.Unification
 import Specdris.Spec
 
 %access export

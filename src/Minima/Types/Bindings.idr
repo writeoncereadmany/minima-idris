@@ -1,6 +1,6 @@
 module Bindings
 
-import MinimaTypes
+import Minima.Types.MinimaTypes
 
 %access public export
 

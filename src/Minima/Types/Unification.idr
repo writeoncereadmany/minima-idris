@@ -1,8 +1,8 @@
 module Unification
 
-import MinimaTypes
-import Bindings
-import TypeErrors
+import Minima.Types.MinimaTypes
+import Minima.Types.Bindings
+import Minima.Types.TypeErrors
 
 %access public export
 

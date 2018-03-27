@@ -1,9 +1,9 @@
 module CallTest
 
-import MinimaTypes
-import Bindings
-import TypeErrors
-import Call
+import Minima.Types.MinimaTypes
+import Minima.Types.Bindings
+import Minima.Types.TypeErrors
+import Minima.Types.Call
 import Specdris.Spec
 
 %access export

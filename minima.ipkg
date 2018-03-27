@@ -4,15 +4,15 @@ sourcedir = src
 
 pkgs = specdris
 
-modules = MinimaTypes
-        , Bindings
-        , TypeErrors
-        , Assignment
-        , Call
-        , Unification
-        , test.AssignmentTest
-        , test.CallTest
-        , test.UnificationTest
+modules = Minima.Types.MinimaTypes
+        , Minima.Types.Bindings
+        , Minima.Types.TypeErrors
+        , Minima.Types.Assignment
+        , Minima.Types.Call
+        , Minima.Types.Unification
+        , Test.Types.AssignmentTest
+        , Test.Types.CallTest
+        , Test.Types.UnificationTest
 
 tests = AssignmentTest.specs
       , CallTest.specs
