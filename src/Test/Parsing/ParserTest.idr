@@ -35,3 +35,7 @@ specs = spec $ do
       parse expression "'cheeseburger'" \@/ StringLiteral "cheeseburger"
     it "Parse a definition" $ do
       parse expression "foo is 12" \@/ Definition "foo" (NumberLiteral 12)
+    it "Parse a function" $ do
+      parse expression "[a, b] => 'shufflepants'" \@/ Function ["a", "b"] (StringLiteral "shufflepants")
+    it "Parse a call" $ do
+      parse expression "foo[bar]" \@/ Call (Variable "foo") [Variable "bar"]
