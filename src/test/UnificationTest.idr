@@ -39,76 +39,32 @@ identity = Function [number] number
 stringOrShowNumber : MinimaType
 stringOrShowNumber = Union [string, showNumber]
 
-yieldsType' : (expected : MinimaType) -> (actual: MinimaType) -> SpecResult
-yieldsType' = shouldBe
-
-yieldsBindings' : (expected : Bindings) -> (actual: Bindings) -> SpecResult
-yieldsBindings' = shouldBe
-
-yieldsType : MinimaType -> MinimaType -> IO ()
-yieldsType = assertEq
-
-yieldsBindings : Bindings -> Bindings -> IO ()
-yieldsBindings = assertEq
-
-unifyingUnionAndSubsetYieldsThatUnion : IO ()
-unifyingUnionAndSubsetYieldsThatUnion =
-      yieldsType maybeString
-      $ [] |=> string |? maybeString
-
-unifyingOverlappingUnionsYieldsAllPossibleForms : IO ()
-unifyingOverlappingUnionsYieldsAllPossibleForms =
-      yieldsType maybeStringOrNumber
-      $ [] |=> maybeString |? maybeNumber
-
-unifyingDataAndFunctionsYieldsUnion : IO ()
-unifyingDataAndFunctionsYieldsUnion =
-      yieldsType stringOrShowNumber
-      $ [] |=> string |? showNumber
-
-unifyingFunctionsWithDifferentReturnTypesYieldsFunctionWithUnionReturnType : IO ()
-unifyingFunctionsWithDifferentReturnTypesYieldsFunctionWithUnionReturnType =
-      yieldsType (Function [number] stringOrNumber)
-      $ [] |=> showNumber |? identity
-
-unifyingFunctionsWithDifferentArgumentTypesYieldsIntersectionOfArgumentTypes : IO ()
-unifyingFunctionsWithDifferentArgumentTypesYieldsIntersectionOfArgumentTypes =
-      yieldsType (Function [string] string)
-      $ [] |=> Function [maybeString] string |? Function [stringOrNumber] string
-
-nonOverlappingBindingsCondenseToSameBindings : IO ()
-nonOverlappingBindingsCondenseToSameBindings =
-      yieldsBindings [((0, 0), string), ((0, 1), number)]
-      $ condense [((0, 0), string), ((0, 1), number)]
-
-multipleRedefinitionsCondenseToSingleDefinition : IO ()
-multipleRedefinitionsCondenseToSingleDefinition =
-      yieldsBindings [((0, 0), string)]
-      $ condense [((0, 0), string), ((0, 0), string), ((0, 0), string)]
-
-overlappingBindingsCondenseToUnificationOfBindings : IO ()
-overlappingBindingsCondenseToUnificationOfBindings =
-      yieldsBindings [((1, 0), maybeString)]
-      $ condense [((1, 0), string), ((1, 0), nothing)]
-
+infixl 1 :::
+(:::) : (actual : MinimaType) -> (expected: MinimaType) -> SpecResult
+(:::) = shouldBe
 
 specs : IO ()
 specs = spec $ do
-  describe "Basic unifications" $ do
+  describe "Unifying types:" $ do
     it "unifyingSameDatatypeYieldsThatDatatype" $ do
-      yieldsType string
-      $ [] |=> string |? string
+      [] |=> string |? string ::: string
     it "unifyingDifferentDatatypesYieldsTheirUnion" $ do
-      yieldsType maybeString
-      $ [] |=> string |? nothing
+      [] |=> string |? nothing ::: maybeString
+    it "unifyingUnionAndSubsetYieldsThatUnion" $ do
+      [] |=> string |? maybeString ::: maybeString
+    it "unifyingOverlappingUnionsYieldsAllPossibleForms" $ do
+      [] |=> maybeString |? maybeNumber ::: maybeStringOrNumber
+    it "unifyingDataAndFunctionsYieldsUnion" $ do
+      [] |=> string |? showNumber ::: stringOrShowNumber
+    it "unifyingFunctionsWithDifferentReturnTypesYieldsFunctionWithUnionReturnType" $ do
+      [] |=> showNumber |? identity ::: Function [number] stringOrNumber
+    it "unifyingFunctionsWithDifferentArgumentTypesYieldsIntersectionOfArgumentTypes" $ do
+      [] |=> Function [maybeString] string |? Function [stringOrNumber] string ::: Function [string] string
 
-cases : IO ()
-cases = do putStrLn "  ** Test suite UnificationTest: "
-           unifyingUnionAndSubsetYieldsThatUnion
-           unifyingOverlappingUnionsYieldsAllPossibleForms
-           nonOverlappingBindingsCondenseToSameBindings
-           overlappingBindingsCondenseToUnificationOfBindings
-           multipleRedefinitionsCondenseToSingleDefinition
-           unifyingDataAndFunctionsYieldsUnion
-           unifyingFunctionsWithDifferentReturnTypesYieldsFunctionWithUnionReturnType
-           unifyingFunctionsWithDifferentArgumentTypesYieldsIntersectionOfArgumentTypes
+  describe "Unifying bindings: " $ do
+    it "nonOverlappingBindingsCondenseToSameBindings" $ do
+      condense [((0, 0), string), ((0, 1), number)] === [((0, 0), string), ((0, 1), number)]
+    it "multipleRedefinitionsCondenseToSingleDefinition" $ do
+      condense [((0, 0), string), ((0, 0), string), ((0, 0), string)] === [((0,0), string)]
+    it "overlappingBindingsCondenseToUnificationOfBindings" $ do
+      condense [((1, 0), string), ((1, 0), nothing)] === [((1, 0), maybeString)]

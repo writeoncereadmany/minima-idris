@@ -16,6 +16,5 @@ modules = MinimaTypes
         , test.UnificationTest
 
 tests = AssignmentTest.cases
-      , CallTest.cases
-      , UnificationTest.cases
+      , CallTest.specs
       , UnificationTest.specs
