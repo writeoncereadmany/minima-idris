@@ -66,6 +66,7 @@ mutual
                   pure $ foldl (\ex => \f => f ex) exp operations
 
 program : Parser (List Expression)
-program = do expressions <- list expression
+program = do spaces
+             expressions <- list expression
              eof
              pure expressions
