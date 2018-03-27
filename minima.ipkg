@@ -14,6 +14,7 @@ modules = Minima.AST
         , Minima.Types.Unification
         , Test.Parsing.ParserTest
         , Test.Types.AssignmentTest
+        , Test.Support.EitherResults
         , Test.Types.CallTest
         , Test.Types.UnificationTest
 
