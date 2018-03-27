@@ -2,14 +2,17 @@ package minima
 
 sourcedir = src
 
-pkgs = specdris
+pkgs = specdris, lightyear
 
-modules = Minima.Types.MinimaTypes
+modules = Minima.AST
+        , Minima.Parsing.Parser
+        , Minima.Types.MinimaTypes
         , Minima.Types.Bindings
         , Minima.Types.TypeErrors
         , Minima.Types.Assignment
         , Minima.Types.Call
         , Minima.Types.Unification
+        , Test.Parsing.ParserTest
         , Test.Types.AssignmentTest
         , Test.Types.CallTest
         , Test.Types.UnificationTest
@@ -17,3 +20,4 @@ modules = Minima.Types.MinimaTypes
 tests = AssignmentTest.specs
       , CallTest.specs
       , UnificationTest.specs
+      , ParserTest.specs
