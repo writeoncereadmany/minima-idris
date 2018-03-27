@@ -23,7 +23,6 @@ string = StringLiteral <$> quoted '''
 list : Parser a -> Parser (List a)
 list elem = sepBy elem (token ",")
 
-
 mutual
   definition : Parser Expression
   definition = do name <- lexeme identifier
@@ -63,5 +62,10 @@ mutual
 
   expression : Parser Expression
   expression = do exp <- fragment
-                  modifiedBy <- (call <|> pure id)
-                  pure $ modifiedBy exp
+                  operations <- many call
+                  pure $ foldl (\ex => \f => f ex) exp operations
+
+program : Parser (List Expression)
+program = do expressions <- list expression
+             eof
+             pure expressions
