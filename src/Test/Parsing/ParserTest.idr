@@ -29,3 +29,9 @@ specs = spec $ do
       cannot $ parse expression "!"
     it "Parse a variable" $ do
       parse expression "foo" \@/ Variable "foo"
+    it "Parse a number" $ do
+      parse expression "12" \@/ NumberLiteral 12
+    it "Parse a string" $ do
+      parse expression "'cheeseburger'" \@/ StringLiteral "cheeseburger"
+    it "Parse a definition" $ do
+      parse expression "foo is 12" \@/ Definition "foo" (NumberLiteral 12)

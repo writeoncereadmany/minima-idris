@@ -4,7 +4,7 @@ module AST
 
 -- not touching on objects quite yet, start with data and functions
 data Expression = StringLiteral String
-                | NumberLiteral String
+                | NumberLiteral Integer
                 | Variable String
                 | Definition String Expression
                 | Function (List String) Expression
@@ -21,7 +21,7 @@ joinWith sep (x :: xs) = joinWith' xs x where
 
 Show Expression where
   show (StringLiteral string) = "\"" ++ string ++ "\""
-  show (NumberLiteral num) = num
+  show (NumberLiteral num) = show num
   show (Variable var) = var
   show (Definition name exp) = name ++ " is " ++ show exp
   show (Function args body) = show args ++ " => " ++ show body
