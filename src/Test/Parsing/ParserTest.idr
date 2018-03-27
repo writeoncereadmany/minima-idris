@@ -43,6 +43,9 @@ specs = spec $ do
       parse expression "(12, 'hello', foo)" \@/ Group [NumberLiteral 12, StringLiteral "hello", Variable "foo"]
     it "Parse chained call" $ do
       parse expression "foo[bar][baz]" \@/ Call (Call (Variable "foo") [Variable "bar"]) [Variable "baz"]
+    it "Can nest calls" $ do
+      parse expression "foo[bar[baz]]" \@/ Call (Variable "foo") [Call (Variable "bar") [Variable "baz"]]
+
 
   describe "Can parse programs" $ do
     it "Can parse an empty program" $ do
