@@ -11,6 +11,28 @@ data Expression a = StringLiteral a String
                   | Call a (Expression a) (List (Expression a))
                   | Group a (List (Expression a))
 
+record ExpressionSemantics a c where
+  constructor MkExpressionSemantics
+  onStringLiteral : c -> a -> String -> c
+  onNumberLiteral : c -> a -> Integer -> c
+  onVariable : c -> a -> String -> c
+  onDefinition : c -> a -> String -> c -> c
+  onFunction : c -> a -> List String -> Expression a -> c
+  onCall : c -> a -> c -> List c -> c
+  onGroup : c -> a -> List c -> c
+
+
+foldExpression : ExpressionSemantics a c -> c -> Expression a -> c
+foldExpression apply = foldOver where
+  foldOver context (StringLiteral a value) = onStringLiteral apply context a value
+  foldOver context (NumberLiteral a value) = onNumberLiteral apply context a value
+  foldOver context (Variable a name) = onVariable apply context a name
+  foldOver context (Definition a name value) = onDefinition apply context a name (foldOver context value)
+  foldOver context (Function a args body) = onFunction apply context a args body
+  foldOver context (Call a fun args) = onCall apply context a (foldOver context fun) (scanl foldOver context args)
+  foldOver context (Group a exps) = onGroup apply context a (scanl foldOver context exps)
+
+
 joinWith : String -> List String -> String
 joinWith sep [] = ""
 joinWith sep (x :: xs) = joinWith' xs x where
