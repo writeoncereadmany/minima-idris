@@ -8,6 +8,7 @@ data Value = NumberValue Integer
            | StringValue String
            | Success
            | FunctionValue (List String) (Expression ())
+           | NativeFunction (IO () -> List Value -> (Value, IO ()))
 
 Eq Value where
   (==) (NumberValue x) (NumberValue y) = x == y
@@ -21,3 +22,4 @@ Show Value where
   show (StringValue x) = x
   show Success = "Success"
   show (FunctionValue xs x) = show xs ++ " => " ++ show x
+  show (NativeFunction _) = "Native Function"

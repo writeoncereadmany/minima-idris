@@ -8,11 +8,19 @@ import Specdris.Spec
 import Test.Support.EitherResults
 import Lightyear.Strings
 import Lightyear.Position
+import Debug.Error
 
+%language ElabReflection
 %access export
 
+plus : Value
+plus = NativeFunction doPlus where
+  doPlus : IO () -> List Value -> (Value, IO ())
+  doPlus i [(NumberValue x), (NumberValue y)] = (NumberValue (x + y), i)
+  doPlus _ args = error $ "Expected two numbers: got " ++ show args
+
 prelude : InterpreterState
-prelude = MkInterpreterState Success [] (pure ())
+prelude = MkInterpreterState Success [("plus", plus)] (pure ())
 
 evaluate : String -> Either String Value
 evaluate text = do prog <- parse program text
@@ -30,3 +38,5 @@ specs = spec $ do
       evaluate "a is 42, a" \@/ NumberValue 42
     it "Can store and call a function" $ do
       evaluate "a is [b] => b, a['hats']" \@/ StringValue "hats"
+    it "Can evaluate a native function" $ do
+      evaluate "plus[12, 42]" \@/ NumberValue 54

@@ -44,6 +44,9 @@ interpretGroup st _ exps@(x :: xs) = record { variables = variables st } (last e
 mutual
   interpretCall : InterpreterState -> () -> InterpreterState -> List InterpreterState -> InterpreterState
   interpretCall st _ fun args = case value fun of
+    (NativeFunction f) => let oldIo = io $ last (fun :: args)
+                              (val, newIo) = f oldIo (value <$> args)
+                           in record { value = val, io = newIo } st
     (FunctionValue params body) => if length args /= length params
       then error $ "Function called with wrong arity: expected " ++ show params ++ ", got " ++ show (value <$> args)
       else let bindings = zip params (value <$> args)
