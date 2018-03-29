@@ -21,6 +21,10 @@ record ExpressionSemantics a c where
   onCall : c -> a -> c -> List c -> c
   onGroup : c -> a -> List c -> c
 
+accumulate : (a -> b -> a) -> a -> List b -> List a
+accumulate f x [] = []
+accumulate f x (y :: xs) = let next = f x y
+                            in next :: accumulate f next xs
 
 foldExpression : ExpressionSemantics a c -> c -> Expression a -> c
 foldExpression apply = foldOver where
@@ -29,7 +33,9 @@ foldExpression apply = foldOver where
   foldOver context (Variable a name) = onVariable apply context a name
   foldOver context (Definition a name value) = onDefinition apply context a name (foldOver context value)
   foldOver context (Function a args body) = onFunction apply context a args body
-  foldOver context (Call a fun args) = onCall apply context a (foldOver context fun) (scanl foldOver context args)
+  foldOver context (Call a fun args) = let fContext = foldOver context fun
+                                           argContexts = accumulate foldOver fContext args
+                                        in onCall apply context a fContext argContexts
   foldOver context (Group a exps) = onGroup apply context a (scanl foldOver context exps)
 
 

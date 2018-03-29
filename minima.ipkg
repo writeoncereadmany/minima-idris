@@ -13,7 +13,10 @@ modules = Minima.AST
         , Minima.Types.Assignment
         , Minima.Types.Call
         , Minima.Types.Unification
+        , Minima.Interpreter.Interpreter
+        , Minima.Interpreter.Value
         , Test.AnnotationTests
+        , Test.Interpreter.InterpreterTest
         , Test.Parsing.ParserTest
         , Test.Types.AssignmentTest
         , Test.Support.EitherResults
@@ -25,3 +28,4 @@ tests = AssignmentTest.specs
       , UnificationTest.specs
       , ParserTest.specs
       , AnnotationTests.specs
+      , InterpreterTest.specs
