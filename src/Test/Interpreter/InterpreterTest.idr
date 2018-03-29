@@ -15,12 +15,19 @@ import Debug.Error
 
 plus : Value
 plus = NativeFunction doPlus where
-  doPlus : IO () -> List Value -> (Value, IO ())
+  doPlus : Implementation
   doPlus i [(NumberValue x), (NumberValue y)] = (NumberValue (x + y), i)
   doPlus _ args = error $ "Expected two numbers: got " ++ show args
 
+print : Value
+print = NativeFunction doPrint where
+  doPrint : Implementation
+  doPrint i [(StringValue x)] = (Success, i >>= (const $ putStr x))
+  doPrint i [(NumberValue x)] = (Success, i >>= (const $ putStr $ show x))
+  doPrint _ args = error $ "Expected a String or Number: got " ++ show args
+
 prelude : InterpreterState
-prelude = MkInterpreterState Success [("plus", plus)] (pure ())
+prelude = MkInterpreterState Success [("plus", plus), ("print", print)] (pure ())
 
 evaluate : String -> Either String Value
 evaluate text = do prog <- parse program text

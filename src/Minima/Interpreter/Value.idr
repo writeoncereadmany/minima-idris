@@ -4,11 +4,15 @@ import Minima.AST
 
 %access public export
 
-data Value = NumberValue Integer
-           | StringValue String
-           | Success
-           | FunctionValue (List String) (Expression ())
-           | NativeFunction (IO () -> List Value -> (Value, IO ()))
+mutual
+  Implementation : Type
+  Implementation = IO () -> List Value -> (Value, IO ())
+
+  data Value = NumberValue Integer
+             | StringValue String
+             | Success
+             | FunctionValue (List String) (Expression ())
+             | NativeFunction Implementation
 
 Eq Value where
   (==) (NumberValue x) (NumberValue y) = x == y
