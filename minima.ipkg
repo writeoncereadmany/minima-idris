@@ -5,6 +5,7 @@ sourcedir = src
 pkgs = specdris, lightyear
 
 modules = Minima.AST
+        , Minima.Annotations
         , Minima.Parsing.Parser
         , Minima.Types.MinimaTypes
         , Minima.Types.Bindings
@@ -12,6 +13,7 @@ modules = Minima.AST
         , Minima.Types.Assignment
         , Minima.Types.Call
         , Minima.Types.Unification
+        , Test.AnnotationTests
         , Test.Parsing.ParserTest
         , Test.Types.AssignmentTest
         , Test.Support.EitherResults
@@ -22,3 +24,4 @@ tests = AssignmentTest.specs
       , CallTest.specs
       , UnificationTest.specs
       , ParserTest.specs
+      , AnnotationTests.specs
