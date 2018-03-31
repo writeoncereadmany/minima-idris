@@ -1,6 +1,7 @@
 module InterpreterTest
 
 import Minima.Interpreter.Interpreter
+import Minima.Interpreter.Interaction
 import Minima.Interpreter.Value
 import Minima.AST
 import Minima.Parsing.Parser
@@ -13,23 +14,24 @@ import Debug.Error
 %language ElabReflection
 %access export
 
-plus : Value
+plus : Value a
 plus = NativeFunction doPlus where
-  doPlus : Implementation
+  doPlus : Implementation a
   doPlus i [(NumberValue x), (NumberValue y)] = (NumberValue (x + y), i)
   doPlus _ args = error $ "Expected two numbers: got " ++ show args
 
-print : Value
-print = NativeFunction doPrint where
-  doPrint : Implementation
-  doPrint i [(StringValue x)] = (Success, i >>= (const $ putStr x))
-  doPrint i [(NumberValue x)] = (Success, i >>= (const $ putStr $ show x))
-  doPrint _ args = error $ "Expected a String or Number: got " ++ show args
+doPrint : (Interaction i) => Implementation (i ())
+doPrint i [(StringValue x)] = (Success, i >>= (const $ print x))
+doPrint i [(NumberValue x)] = (Success, i >>= (const $ print $ show x))
+doPrint _ args = error $ "Expected a String or Number: got " ++ show args
 
-prelude : InterpreterState
+print : (Interaction i) => Value (i ())
+print = NativeFunction doPrint
+
+prelude : (Interaction i) => InterpreterState (i ())
 prelude = MkInterpreterState Success [("plus", plus), ("print", print)] (pure ())
 
-evaluate : String -> Either String Value
+evaluate : String -> Either String (Value (IO ()))
 evaluate text = do prog <- parse program text
                    let finalState = runProgram prelude prog
                    pure $ value finalState

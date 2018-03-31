@@ -8,41 +8,41 @@ import Debug.Error
 %language ElabReflection
 %access public export
 
-Environment : Type
-Environment = List (String, Value)
+Environment : Type -> Type
+Environment i = List (String, (Value i))
 
-record InterpreterState where
+record InterpreterState i where
   constructor MkInterpreterState
-  value : Value
-  variables : Environment
-  io : IO ()
+  value : Value i
+  variables : Environment i
+  io : i
 
-Show InterpreterState where
+Show (InterpreterState i) where
   show x = show $ value x
 
-interpretStringLiteral : InterpreterState -> () -> String -> InterpreterState
+interpretStringLiteral : InterpreterState i -> () -> String -> InterpreterState i
 interpretStringLiteral st _ val = record { value = StringValue val } st
 
-interpretNumberLiteral : InterpreterState -> () -> Integer -> InterpreterState
+interpretNumberLiteral : InterpreterState i -> () -> Integer -> InterpreterState i
 interpretNumberLiteral st _ val = record { value = NumberValue val } st
 
-interpretVariable : InterpreterState -> () -> String -> InterpreterState
+interpretVariable : InterpreterState i -> () -> String -> InterpreterState i
 interpretVariable st _ name = case lookup name (variables st) of
   Nothing => error $ "Variable " ++ name ++ " is undefined"
   (Just val) => record { value = val } st
 
-interpretDefinition : InterpreterState -> () -> String -> InterpreterState -> InterpreterState
+interpretDefinition : InterpreterState i -> () -> String -> InterpreterState i -> InterpreterState i
 interpretDefinition st _ name val = record { value = Success, variables $= ((name, value val) ::) } st
 
-interpretFunction : InterpreterState -> () -> List String -> Expression () -> InterpreterState
+interpretFunction : InterpreterState i -> () -> List String -> Expression () -> InterpreterState i
 interpretFunction st _ args body = record { value = FunctionValue args body } st
 
-interpretGroup : InterpreterState -> () -> List InterpreterState -> InterpreterState
+interpretGroup : InterpreterState i -> () -> List (InterpreterState i) -> InterpreterState i
 interpretGroup st _ [] = record { value = Success} st
 interpretGroup st _ exps@(x :: xs) = record { variables = variables st } (last exps)
 
 mutual
-  interpretCall : InterpreterState -> () -> InterpreterState -> List InterpreterState -> InterpreterState
+  interpretCall : InterpreterState i -> () -> InterpreterState i -> List (InterpreterState i) -> InterpreterState i
   interpretCall st _ fun args = case value fun of
     (NativeFunction f) => let oldIo = io $ last (fun :: args)
                               (val, newIo) = f oldIo (value <$> args)
@@ -54,7 +54,7 @@ mutual
             in foldExpression interpreter funState body
     notFun => error $ show notFun ++ " is not callable"
 
-  interpreter : ExpressionSemantics () InterpreterState
+  interpreter : ExpressionSemantics () (InterpreterState i)
   interpreter = MkExpressionSemantics
                   interpretStringLiteral
                   interpretNumberLiteral
@@ -64,8 +64,8 @@ mutual
                   interpretCall
                   interpretGroup
 
-interpret : InterpreterState -> Expression a -> InterpreterState
+interpret : InterpreterState i -> Expression a -> InterpreterState i
 interpret st expression = foldExpression interpreter st (stripAnnotations expression)
 
-runProgram : InterpreterState -> List (Expression a) -> InterpreterState
+runProgram : InterpreterState i -> List (Expression a) -> InterpreterState i
 runProgram = foldl interpret
