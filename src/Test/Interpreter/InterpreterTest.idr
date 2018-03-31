@@ -57,5 +57,10 @@ specs = spec $ do
       evaluate "a is [b] => b, a['hats']" \@/ StringValue "hats"
     it "Can evaluate a native function" $ do
       evaluate "plus[12, 42]" \@/ NumberValue 54
+  describe "Output" $ do
     it "Can generate program output" $ do
       outputFrom "print['Hello, World!']" \@/ ["Hello, World!"]
+    it "Accumulates IO effects" $ do
+      outputFrom "print['Hello, World!'], print['Goodbye, blue sky']" \@/ ["Hello, World!", "Goodbye, blue sky"]
+    it "Accumulates IO effects from function arg evaluation" $ do
+      outputFrom "a is [b, b] => print['three!'], a[print['one!'], print['two!']]" \@/ ["one!", "two!", "three!"]

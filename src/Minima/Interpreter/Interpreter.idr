@@ -53,8 +53,8 @@ mutual
     (FunctionValue params body) => if length args /= length params
       then Left $ "Function called with wrong arity: expected " ++ show params ++ ", got " ++ show (getL value <$> args)
       else let bindings = zip params (getL value <$> args)
-               funState = variables ^%= (bindings ++) $ fun
-            in foldExpression interpreter (pure funState) body
+               bound = variables ^%= (bindings ++) $ last (fun :: args)
+            in foldExpression interpreter (pure bound) body
     notFun => Left $ show notFun ++ " is not callable"
 
   interpretCall : ProgramState i -> () -> ProgramState i -> List (ProgramState i) -> ProgramState i
