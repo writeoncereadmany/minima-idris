@@ -47,9 +47,9 @@ allSucceeded xs = case lefts xs of
 mutual
   call : InterpreterState i -> InterpreterState i -> List (InterpreterState i) -> ProgramState i
   call st fun args = case value ^$ fun of
-    (NativeFunction f) => let oldIo = io ^$ last (fun :: args)
-                              (val, newIo) = f oldIo (getL value <$> args)
-                           in pure $ value ^= val $ io ^= newIo $ st
+    (NativeFunction f) => do let oldIo = io ^$ last (fun :: args)
+                             (val, newIo) <- f oldIo (getL value <$> args)
+                             pure $ value ^= val $ io ^= newIo $ st
     (FunctionValue params body) => if length args /= length params
       then Left $ "Function called with wrong arity: expected " ++ show params ++ ", got " ++ show (getL value <$> args)
       else let bindings = zip params (getL value <$> args)

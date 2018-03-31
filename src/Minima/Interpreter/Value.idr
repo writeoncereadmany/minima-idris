@@ -6,7 +6,7 @@ import Minima.AST
 
 mutual
   Implementation : Type -> Type
-  Implementation i = i -> List (Value i) -> (Value i, i)
+  Implementation i = i -> List (Value i) -> Either String (Value i, i)
 
   data Value i = NumberValue Integer
                | StringValue String

@@ -11,22 +11,20 @@ import Test.Support.EitherResults
 import Test.Support.MockInteraction
 import Lightyear.Strings
 import Lightyear.Position
-import Debug.Error
 import Lens
 
-%language ElabReflection
 %access export
 
 plus : Value a
 plus = NativeFunction doPlus where
   doPlus : Implementation a
-  doPlus i [(NumberValue x), (NumberValue y)] = (NumberValue (x + y), i)
-  doPlus _ args = error $ "Expected two numbers: got " ++ show args
+  doPlus i [(NumberValue x), (NumberValue y)] = pure (NumberValue (x + y), i)
+  doPlus _ args = Left $ "Expected two numbers: got " ++ show args
 
 doPrint : (Interaction i) => Implementation (i ())
-doPrint i [(StringValue x)] = (Success, i >>= (const $ print x))
-doPrint i [(NumberValue x)] = (Success, i >>= (const $ print $ show x))
-doPrint _ args = error $ "Expected a String or Number: got " ++ show args
+doPrint i [(StringValue x)] = pure (Success, i >>= (const $ print x))
+doPrint i [(NumberValue x)] = pure (Success, i >>= (const $ print $ show x))
+doPrint _ args = Left $ "Expected a String or Number: got " ++ show args
 
 print : (Interaction i) => Value (i ())
 print = NativeFunction doPrint
