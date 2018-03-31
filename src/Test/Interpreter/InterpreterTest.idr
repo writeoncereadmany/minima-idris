@@ -1,6 +1,7 @@
 module InterpreterTest
 
 import Minima.Interpreter.Interpreter
+import Minima.Interpreter.InterpreterState
 import Minima.Interpreter.Interaction
 import Minima.Interpreter.Value
 import Minima.AST

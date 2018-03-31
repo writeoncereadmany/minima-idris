@@ -2,7 +2,7 @@ package minima
 
 sourcedir = src
 
-pkgs = specdris, lightyear
+pkgs = specdris, lightyear, lens
 
 modules = Minima.AST
         , Minima.Annotations
@@ -14,6 +14,7 @@ modules = Minima.AST
         , Minima.Types.Call
         , Minima.Types.Unification
         , Minima.Interpreter.Interpreter
+        , Minima.Interpreter.InterpreterState
         , Minima.Interpreter.Value
         , Test.AnnotationTests
         , Test.Interpreter.InterpreterTest

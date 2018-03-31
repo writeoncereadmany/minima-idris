@@ -3,22 +3,14 @@ module Interpreter
 import Minima.AST
 import Minima.Annotations
 import Minima.Interpreter.Value
+import Minima.Interpreter.InterpreterState 
 import Debug.Error
+import Lens
 
 %language ElabReflection
 %access public export
 
-Environment : Type -> Type
-Environment i = List (String, (Value i))
 
-record InterpreterState i where
-  constructor MkInterpreterState
-  value : Value i
-  variables : Environment i
-  io : i
-
-Show (InterpreterState i) where
-  show x = show $ value x
 
 interpretStringLiteral : InterpreterState i -> () -> String -> InterpreterState i
 interpretStringLiteral st _ val = record { value = StringValue val } st
