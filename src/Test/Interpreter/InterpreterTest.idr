@@ -36,7 +36,7 @@ prelude = MkInterpreterState Success [("plus", plus), ("print", print)] (pure ()
 
 run : String -> Either String (InterpreterState (MockInteraction ()))
 run text = do prog <- parse program text
-              pure $ runProgram prelude prog
+              runProgram prelude prog
 
 evaluate : String -> Either String (Value (MockInteraction ()))
 evaluate text = do result <- run text

@@ -4,50 +4,66 @@ import Minima.AST
 import Minima.Annotations
 import Minima.Interpreter.Value
 import Minima.Interpreter.InterpreterState
-import Debug.Error
 import Lens
 
-%language ElabReflection
 %access public export
 
-interpretStringLiteral : InterpreterState i -> () -> String -> InterpreterState i
-interpretStringLiteral st _ val = value ^= StringValue val $ st
+ProgramState : Type -> Type
+ProgramState i = Either String (InterpreterState i)
 
-interpretNumberLiteral : InterpreterState i -> () -> Integer -> InterpreterState i
-interpretNumberLiteral st _ val = value ^= NumberValue val $ st
+interpretStringLiteral : ProgramState i -> () -> String -> ProgramState i
+interpretStringLiteral st _ val = (value ^= StringValue val) <$> st
 
-interpretVariable : InterpreterState i -> () -> String -> InterpreterState i
-interpretVariable st _ name = case lookup name (variables ^$ st) of
-  Nothing => error $ "Variable " ++ name ++ " is undefined"
-  (Just val) => value ^= val $ st
+interpretNumberLiteral : ProgramState i -> () -> Integer -> ProgramState i
+interpretNumberLiteral st _ val = (value ^= NumberValue val) <$> st
 
-interpretDefinition : InterpreterState i -> () -> String -> InterpreterState i -> InterpreterState i
-interpretDefinition st _ name val = value ^= Success
-                                  $ variables ^%= ((name, value ^$ val) ::)
-                                  $ st
+lookupVariable : String -> InterpreterState i -> Either String (Value i)
+lookupVariable name st = case lookup name (variables ^$ st) of
+  Nothing => Left $ "Variable " ++ name ++ " is undefined"
+  (Just val) => pure val
 
+interpretVariable : ProgramState i -> () -> String -> ProgramState i
+interpretVariable st _ name = do val <- st >>= lookupVariable name
+                                 (value ^= val) <$> st
 
-interpretFunction : InterpreterState i -> () -> List String -> Expression () -> InterpreterState i
-interpretFunction st _ args body = value ^= FunctionValue args body $ st
+interpretDefinition : ProgramState i -> () -> String -> ProgramState i -> ProgramState i
+interpretDefinition st _ name val = do toAssign <- getL value <$> val
+                                       assigned <- (variables ^%= ((name, toAssign) ::)) <$> st
+                                       pure $ value ^= Success $ assigned
 
-interpretGroup : InterpreterState i -> () -> List (InterpreterState i) -> InterpreterState i
-interpretGroup st _ [] = value ^= Success $ st
-interpretGroup st _ exps@(x :: xs) = variables ^= (variables ^$ st) $ (last exps)
+interpretFunction : ProgramState i -> () -> List String -> Expression () -> ProgramState i
+interpretFunction st _ args body = (value ^= FunctionValue args body) <$> st
+
+interpretGroup : ProgramState i -> () -> List (ProgramState i) -> ProgramState i
+interpretGroup st _ [] = (value ^= Success) <$> st
+interpretGroup st _ exps@(x :: xs) = do oldVariables <- getL variables <$> st
+                                        (variables ^= oldVariables) <$> (last exps)
+
+allSucceeded : List (Either a b) -> Either a (List b)
+allSucceeded xs = case lefts xs of
+  [] => Right $ rights xs
+  (x :: xs) => Left x
 
 mutual
-  interpretCall : InterpreterState i -> () -> InterpreterState i -> List (InterpreterState i) -> InterpreterState i
-  interpretCall st _ fun args = case value ^$ fun of
+  call : InterpreterState i -> InterpreterState i -> List (InterpreterState i) -> ProgramState i
+  call st fun args = case value ^$ fun of
     (NativeFunction f) => let oldIo = io ^$ last (fun :: args)
                               (val, newIo) = f oldIo (getL value <$> args)
-                           in value ^= val $ io ^= newIo $ st
+                           in pure $ value ^= val $ io ^= newIo $ st
     (FunctionValue params body) => if length args /= length params
-      then error $ "Function called with wrong arity: expected " ++ show params ++ ", got " ++ show (getL value <$> args)
+      then Left $ "Function called with wrong arity: expected " ++ show params ++ ", got " ++ show (getL value <$> args)
       else let bindings = zip params (getL value <$> args)
                funState = variables ^%= (bindings ++) $ fun
-            in foldExpression interpreter funState body
-    notFun => error $ show notFun ++ " is not callable"
+            in foldExpression interpreter (pure funState) body
+    notFun => Left $ show notFun ++ " is not callable"
 
-  interpreter : ExpressionSemantics () (InterpreterState i)
+  interpretCall : ProgramState i -> () -> ProgramState i -> List (ProgramState i) -> ProgramState i
+  interpretCall st' _ fun' args' = do st <- st'
+                                      fun <- fun'
+                                      args <- allSucceeded args'
+                                      call st fun args
+
+  interpreter : ExpressionSemantics () (ProgramState i)
   interpreter = MkExpressionSemantics
                   interpretStringLiteral
                   interpretNumberLiteral
@@ -57,8 +73,8 @@ mutual
                   interpretCall
                   interpretGroup
 
-interpret : InterpreterState i -> Expression a -> InterpreterState i
+interpret : ProgramState i -> Expression a -> ProgramState i
 interpret st expression = foldExpression interpreter st (stripAnnotations expression)
 
-runProgram : InterpreterState i -> List (Expression a) -> InterpreterState i
-runProgram = foldl interpret
+runProgram : InterpreterState i -> List (Expression a) -> ProgramState i
+runProgram prelude = foldl interpret (pure prelude)
