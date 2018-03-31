@@ -21,6 +21,7 @@ record ExpressionSemantics a c where
   onCall : c -> a -> c -> List c -> c
   onGroup : c -> a -> List c -> c
 
+-- basically scanl, only it doesn't include the initial value
 accumulate : (a -> b -> a) -> a -> List b -> List a
 accumulate f x [] = []
 accumulate f x (y :: xs) = let next = f x y
