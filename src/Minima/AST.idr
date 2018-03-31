@@ -36,7 +36,7 @@ foldExpression apply = foldOver where
   foldOver context (Call a fun args) = let fContext = foldOver context fun
                                            argContexts = accumulate foldOver fContext args
                                         in onCall apply context a fContext argContexts
-  foldOver context (Group a exps) = onGroup apply context a (scanl foldOver context exps)
+  foldOver context (Group a exps) = onGroup apply context a (accumulate foldOver context exps)
 
 
 joinWith : String -> List String -> String
