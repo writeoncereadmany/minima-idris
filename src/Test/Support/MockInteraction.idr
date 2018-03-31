@@ -2,6 +2,8 @@ module MockInteraction
 
 import Minima.Interpreter.Interaction
 
+%access public export
+
 data MockInteraction a = Mock a (List String)
 
 Functor MockInteraction where

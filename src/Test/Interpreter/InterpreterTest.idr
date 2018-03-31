@@ -7,6 +7,7 @@ import Minima.AST
 import Minima.Parsing.Parser
 import Specdris.Spec
 import Test.Support.EitherResults
+import Test.Support.MockInteraction
 import Lightyear.Strings
 import Lightyear.Position
 import Debug.Error
@@ -31,7 +32,7 @@ print = NativeFunction doPrint
 prelude : (Interaction i) => InterpreterState (i ())
 prelude = MkInterpreterState Success [("plus", plus), ("print", print)] (pure ())
 
-evaluate : String -> Either String (Value (IO ()))
+evaluate : String -> Either String (Value (MockInteraction ()))
 evaluate text = do prog <- parse program text
                    let finalState = runProgram prelude prog
                    pure $ value finalState
