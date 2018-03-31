@@ -10,24 +10,24 @@ Environment i = List (String, (Value i))
 
 record InterpreterState i where
   constructor MkInterpreterState
-  value : Value i
-  variables : Environment i
-  io : i
+  _value : Value i
+  _variables : Environment i
+  _io : i
 
-lvalue : Lens (InterpreterState i) (Value i)
-lvalue = lens value setValue where
+value : Lens (InterpreterState i) (Value i)
+value = lens _value setValue where
   setValue : Value i -> InterpreterState i -> InterpreterState i
-  setValue v st = record { value = v } st
+  setValue v st = record { _value = v } st
 
-lvariables : Lens (InterpreterState i) (Environment i)
-lvariables = lens variables setVariables where
+variables : Lens (InterpreterState i) (Environment i)
+variables = lens _variables setVariables where
   setVariables : Environment i -> InterpreterState i -> InterpreterState i
-  setVariables vs st = record { variables = vs } st
+  setVariables vs st = record { _variables = vs } st
 
-lio : Lens (InterpreterState i) i
-lio = lens io setIo where
+io : Lens (InterpreterState i) i
+io = lens _io setIo where
   setIo : i -> InterpreterState i -> InterpreterState i
-  setIo i st = record { io = i } st
+  setIo i st = record { _io = i } st
 
 Show (InterpreterState i) where
-  show x = show $ value x
+  show x = show (value ^$ x)

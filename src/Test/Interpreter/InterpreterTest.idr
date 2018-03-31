@@ -12,6 +12,7 @@ import Test.Support.MockInteraction
 import Lightyear.Strings
 import Lightyear.Position
 import Debug.Error
+import Lens
 
 %language ElabReflection
 %access export
@@ -39,11 +40,11 @@ run text = do prog <- parse program text
 
 evaluate : String -> Either String (Value (MockInteraction ()))
 evaluate text = do result <- run text
-                   pure $ value result
+                   pure $ value ^$ result
 
 outputFrom : String -> Either String (List String)
 outputFrom text = do result <- run text
-                     pure $ getOutput (io result)
+                     pure $ getOutput (io ^$ result)
 
 specs: IO ()
 specs = spec $ do
