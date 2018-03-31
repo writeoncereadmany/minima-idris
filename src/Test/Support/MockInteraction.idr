@@ -19,3 +19,6 @@ Monad MockInteraction where
 
 Interaction MockInteraction where
   print x = Mock () [x]
+
+getOutput : MockInteraction a -> List String
+getOutput (Mock payload output) = output
