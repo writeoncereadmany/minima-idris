@@ -49,6 +49,8 @@ specs = spec $ do
       parse program "foo" \@/ [Variable pos "foo"]
     it "Can parse program with single expression encased in whitespace" $ do
       parse program "    foo    " \@/ [Variable pos "foo"]
+    it "Can parse program ending in newline" $ do
+      parse program "print['Hello, World!']\n" \@/ [Call pos (Variable pos "print") [StringLiteral pos "Hello, World!"]]
     it "Cannot parse program with random crap at the end" $ do
       cannot $ parse program "foo bar"
     it "Can parse program with multiple expressions" $ do

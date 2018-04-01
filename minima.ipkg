@@ -17,6 +17,8 @@ modules = Minima.AST
         , Minima.Interpreter.InterpreterState
         , Minima.Interpreter.Value
         , Test.AnnotationTests
+        , Test.Interpreter.MinimaPrelude
+        , Test.Interpreter.FileTests
         , Test.Interpreter.InterpreterTest
         , Test.Parsing.ParserTest
         , Test.Types.AssignmentTest
@@ -30,3 +32,4 @@ tests = AssignmentTest.specs
       , ParserTest.specs
       , AnnotationTests.specs
       , InterpreterTest.specs
+      , FileTests.specs

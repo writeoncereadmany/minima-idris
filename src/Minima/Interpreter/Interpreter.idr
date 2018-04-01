@@ -2,8 +2,8 @@ module Interpreter
 
 import Minima.AST
 import Minima.Annotations
-import Minima.Interpreter.Value
-import Minima.Interpreter.InterpreterState
+import public Minima.Interpreter.Value
+import public Minima.Interpreter.InterpreterState
 import Lens
 
 %access public export

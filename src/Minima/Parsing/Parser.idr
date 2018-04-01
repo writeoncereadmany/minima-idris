@@ -81,5 +81,6 @@ mutual
 program : Parser (List Exp)
 program = do spaces
              expressions <- list expression
+             spaces
              eof
              pure expressions
