@@ -6,6 +6,7 @@ pkgs = specdris, lightyear, lens
 
 modules = Minima.AST
         , Minima.Annotations
+        , Minima.Whatever
         , Minima.Parsing.Parser
         , Minima.Types.MinimaTypes
         , Minima.Types.Bindings

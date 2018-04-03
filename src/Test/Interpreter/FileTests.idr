@@ -10,7 +10,7 @@ showErrors : Show a => String -> Either a b -> Either String b
 showErrors filename (Left a) = Left (show a ++ ": " ++ filename)
 showErrors _ (Right b) = Right b
 
-runFile : String -> IO (Either String (InterpreterState (MockInteraction ())))
+runFile : String -> IO (Either String (InterpreterState (MockInteraction ()) String))
 runFile fileName = do source <- readFile ("examples/" ++ fileName)
                       pure $ showErrors fileName source >>= run
 

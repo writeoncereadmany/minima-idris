@@ -9,7 +9,7 @@ import Minima.AST
 %access public export
 
 Exp : Type
-Exp = Expression Position
+Exp = Expression Position String
 
 identifier : Parser String
 identifier = pack <$> lexeme (some letter)

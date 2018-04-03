@@ -3,21 +3,21 @@ module AST
 %access public export
 
 -- not touching on objects quite yet, start with data and functions
-data Expression a = StringLiteral a String
-                  | NumberLiteral a Integer
-                  | Variable a String
-                  | Definition a String (Expression a)
-                  | Function a (List String) (Expression a)
-                  | Call a (Expression a) (List (Expression a))
-                  | Group a (List (Expression a))
+data Expression a i = StringLiteral a String
+                    | NumberLiteral a Integer
+                    | Variable a i
+                    | Definition a i (Expression a i)
+                    | Function a (List i) (Expression a i)
+                    | Call a (Expression a i) (List (Expression a i))
+                    | Group a (List (Expression a i))
 
-record ExpressionSemantics a c where
+record ExpressionSemantics a i c where
   constructor MkExpressionSemantics
   onStringLiteral : c -> a -> String -> c
   onNumberLiteral : c -> a -> Integer -> c
-  onVariable : c -> a -> String -> c
-  onDefinition : c -> a -> String -> c -> c
-  onFunction : c -> a -> List String -> Expression a -> c
+  onVariable : c -> a -> i -> c
+  onDefinition : c -> a -> i -> c -> c
+  onFunction : c -> a -> List i -> Expression a i -> c
   onCall : c -> a -> c -> List c -> c
   onGroup : c -> a -> List c -> c
 
@@ -27,7 +27,7 @@ accumulate f x [] = []
 accumulate f x (y :: xs) = let next = f x y
                             in next :: accumulate f next xs
 
-foldExpression : ExpressionSemantics a c -> c -> Expression a -> c
+foldExpression : ExpressionSemantics a i c -> c -> Expression a i -> c
 foldExpression apply = foldOver where
   foldOver context (StringLiteral a value) = onStringLiteral apply context a value
   foldOver context (NumberLiteral a value) = onNumberLiteral apply context a value
@@ -48,17 +48,17 @@ joinWith sep (x :: xs) = joinWith' xs x where
   joinWith' (x :: xs) a = joinWith' xs (a ++ sep ++ x)
 
 
-Show (Expression a) where
+Show i => Show (Expression a i) where
   show (StringLiteral a string) = "\"" ++ string ++ "\""
   show (NumberLiteral a num) = show num
-  show (Variable a var) = var
-  show (Definition a name exp) = name ++ " is " ++ show exp
+  show (Variable a var) = show var
+  show (Definition a name exp) = show name ++ " is " ++ show exp
   show (Function a args body) = show args ++ " => " ++ show body
   show (Call a fun args) = show fun ++ show args
   show (Group a xs) = "(" ++ joinWith ", " (show <$> xs) ++ ")"
 
 mutual
-  eq : (a -> a -> Bool) -> Expression a -> Expression a -> Bool
+  eq : (Eq i) => (a -> a -> Bool) -> Expression a i -> Expression a i -> Bool
   eq f (StringLiteral a x) (StringLiteral b y) = f a b && x == y
   eq f (NumberLiteral a x) (NumberLiteral b y) = f a b && x == y
   eq f (Variable a x) (Variable b y) = f a b && x == y
@@ -68,11 +68,11 @@ mutual
   eq f (Group a xs) (Group b ys) = f a b && allEq f xs ys
   eq f _ _ = False
 
-  allEq : (a -> a -> Bool) -> List (Expression a) -> List (Expression a) -> Bool
+  allEq : (Eq i) => (a -> a -> Bool) -> List (Expression a i) -> List (Expression a i) -> Bool
   allEq f [] [] = True
   allEq f [] (x :: xs) = False
   allEq f (x :: xs) [] = False
   allEq f (x :: xs) (y :: ys) = eq f x y && allEq f xs ys
 
-Eq a => Eq (Expression a) where
+(Eq a, Eq i) => Eq (Expression a i) where
   (==) = eq (==)

@@ -5,34 +5,37 @@ import Minima.Interpreter.Interpreter
 import Test.Support.MockInteraction
 import Minima.Parsing.Parser
 import Minima.AST
+import Minima.Whatever
 import Lightyear.Position
 import Lightyear.Strings
 import Lens
 
-plus : Value a
+Whatever String where
+  whatever = ""
+
+plus : Value a String
 plus = NativeFunction doPlus where
-  doPlus : Implementation a
+  doPlus : Implementation a String
   doPlus i [(NumberValue x), (NumberValue y)] = pure (NumberValue (x + y), i)
   doPlus _ args = Left $ "Expected two numbers: got " ++ show args
 
-doPrint : (Interaction i) => Implementation (i ())
-doPrint i [(StringValue x)] = pure (Success, i >>= (const $ print x))
-doPrint i [(NumberValue x)] = pure (Success, i >>= (const $ print $ show x))
-doPrint _ args = Left $ "Expected a String or Number: got " ++ show args
+print : (Interaction i) => Value (i ()) String
+print = NativeFunction doPrint where
+  doPrint : (Interaction i) => Implementation (i ()) String
+  doPrint i [(StringValue x)] = pure (Success, i >>= (const $ print x))
+  doPrint i [(NumberValue x)] = pure (Success, i >>= (const $ print $ show x))
+  doPrint _ args = Left $ "Expected a String or Number: got " ++ show args
 
-print : (Interaction i) => Value (i ())
-print = NativeFunction doPrint
-
-prelude : (Interaction i) => InterpreterState (i ())
+prelude : (Interaction i) => InterpreterState (i ()) String
 prelude = MkInterpreterState Success [("plus", plus), ("print", print)] (pure ())
 
 export
-run : String -> Either String (InterpreterState (MockInteraction ()))
+run : String -> Either String (InterpreterState (MockInteraction ()) String)
 run text = do prog <- parse program text
               runProgram prelude prog
 
 export
-evaluate : String -> Either String (Value (MockInteraction ()))
+evaluate : String -> Either String (Value (MockInteraction ()) String)
 evaluate text = do result <- run text
                    pure $ value ^$ result
 

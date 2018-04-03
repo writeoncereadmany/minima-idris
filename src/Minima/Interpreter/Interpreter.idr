@@ -2,39 +2,40 @@ module Interpreter
 
 import Minima.AST
 import Minima.Annotations
+import Minima.Whatever
 import public Minima.Interpreter.Value
 import public Minima.Interpreter.InterpreterState
 import Lens
 
 %access public export
 
-ProgramState : Type -> Type
-ProgramState i = Either String (InterpreterState i)
+ProgramState : Type -> Type -> Type
+ProgramState i n = Either String (InterpreterState i n)
 
-interpretStringLiteral : ProgramState i -> () -> String -> ProgramState i
+interpretStringLiteral : ProgramState i n -> () -> String -> ProgramState i n
 interpretStringLiteral st _ val = (value ^= StringValue val) <$> st
 
-interpretNumberLiteral : ProgramState i -> () -> Integer -> ProgramState i
+interpretNumberLiteral : ProgramState i n -> () -> Integer -> ProgramState i n
 interpretNumberLiteral st _ val = (value ^= NumberValue val) <$> st
 
-lookupVariable : String -> InterpreterState i -> Either String (Value i)
+lookupVariable : (Eq n, Show n) => n -> InterpreterState i n -> Either String (Value i n)
 lookupVariable name st = case lookup name (variables ^$ st) of
-  Nothing => Left $ "Variable " ++ name ++ " is undefined"
+  Nothing => Left $ "Variable " ++ show name ++ " is undefined"
   (Just val) => pure val
 
-interpretVariable : ProgramState i -> () -> String -> ProgramState i
+interpretVariable : (Eq n, Show n) => ProgramState i n -> () -> n -> ProgramState i n
 interpretVariable st _ name = do val <- st >>= lookupVariable name
                                  (value ^= val) <$> st
 
-interpretDefinition : ProgramState i -> () -> String -> ProgramState i -> ProgramState i
+interpretDefinition : ProgramState i n -> () -> n -> ProgramState i n -> ProgramState i n
 interpretDefinition st _ name val = do toAssign <- getL value <$> val
                                        assigned <- (variables ^%= ((name, toAssign) ::)) <$> st
                                        pure $ value ^= Success $ assigned
 
-interpretFunction : ProgramState i -> () -> List String -> Expression () -> ProgramState i
+interpretFunction : ProgramState i n -> () -> List n -> Expression () n -> ProgramState i n
 interpretFunction st _ args body = (value ^= FunctionValue args body) <$> st
 
-interpretGroup : ProgramState i -> () -> List (ProgramState i) -> ProgramState i
+interpretGroup : ProgramState i n -> () -> List (ProgramState i n) -> ProgramState i n
 interpretGroup st _ [] = (value ^= Success) <$> st
 interpretGroup st _ exps@(x :: xs) = do oldVariables <- getL variables <$> st
                                         (variables ^= oldVariables) <$> (last exps)
@@ -45,7 +46,7 @@ allSucceeded xs = case lefts xs of
   (x :: xs) => Left x
 
 mutual
-  call : InterpreterState i -> InterpreterState i -> List (InterpreterState i) -> ProgramState i
+  call : (Eq n, Show n) => InterpreterState i n -> InterpreterState i n -> List (InterpreterState i n) -> ProgramState i n
   call st fun args = case value ^$ fun of
     (NativeFunction f) => do let oldIo = io ^$ last (fun :: args)
                              (val, newIo) <- f oldIo (getL value <$> args)
@@ -57,13 +58,13 @@ mutual
             in foldExpression interpreter (pure bound) body
     notFun => Left $ show notFun ++ " is not callable"
 
-  interpretCall : ProgramState i -> () -> ProgramState i -> List (ProgramState i) -> ProgramState i
+  interpretCall : (Eq n, Show n) => ProgramState i n -> () -> ProgramState i n -> List (ProgramState i n) -> ProgramState i n
   interpretCall st' _ fun' args' = do st <- st'
                                       fun <- fun'
                                       args <- allSucceeded args'
                                       call st fun args
 
-  interpreter : ExpressionSemantics () (ProgramState i)
+  interpreter : (Eq n, Show n) => ExpressionSemantics () n (ProgramState i n)
   interpreter = MkExpressionSemantics
                   interpretStringLiteral
                   interpretNumberLiteral
@@ -73,8 +74,8 @@ mutual
                   interpretCall
                   interpretGroup
 
-interpret : ProgramState i -> Expression a -> ProgramState i
+interpret : (Eq n, Show n, Whatever n) => ProgramState i n -> Expression a n -> ProgramState i n
 interpret st expression = foldExpression interpreter st (stripAnnotations expression)
 
-runProgram : InterpreterState i -> List (Expression a) -> ProgramState i
+runProgram : (Eq n, Show n, Whatever n) => InterpreterState i n -> List (Expression a n) -> ProgramState i n
 runProgram prelude = foldl interpret (pure prelude)
