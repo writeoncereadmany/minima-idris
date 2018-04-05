@@ -5,9 +5,9 @@ sourcedir = src
 pkgs = specdris, lightyear, lens
 
 modules = Minima.AST
-        , Minima.Annotations
         , Minima.Whatever
         , Minima.Record
+        , Minima.Annotators.Annotations
         , Minima.Parsing.Parser
         , Minima.Types.MinimaTypes
         , Minima.Types.Bindings
@@ -18,7 +18,7 @@ modules = Minima.AST
         , Minima.Interpreter.Interpreter
         , Minima.Interpreter.InterpreterState
         , Minima.Interpreter.Value
-        , Test.AnnotationTests
+        , Test.Annotators.AnnotationTests
         , Test.Interpreter.MinimaPrelude
         , Test.Interpreter.FileTests
         , Test.Interpreter.InterpreterTest

@@ -4,7 +4,7 @@ import Specdris.Spec
 import Minima.AST
 import Minima.Record
 import Minima.Whatever
-import Minima.Annotations
+import Minima.Annotators.Annotations
 import Minima.Parsing.Parser
 import Test.Support.EitherResults
 import Lightyear.Strings

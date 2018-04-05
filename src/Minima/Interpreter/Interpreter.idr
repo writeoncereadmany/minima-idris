@@ -1,7 +1,7 @@
 module Interpreter
 
 import Minima.AST
-import Minima.Annotations
+import Minima.Annotators.Annotations
 import Minima.Whatever
 import public Minima.Interpreter.Value
 import public Minima.Interpreter.InterpreterState
