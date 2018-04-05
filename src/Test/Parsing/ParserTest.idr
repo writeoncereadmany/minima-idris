@@ -2,6 +2,7 @@ module ParserTest
 
 import Specdris.Spec
 import Minima.AST
+import Minima.Record
 import Minima.Parsing.Parser
 import Test.Support.EitherResults
 import Lightyear.Strings
@@ -14,8 +15,11 @@ cannot : (Show b) => Either a b -> SpecResult
 cannot (Left _) = Success
 cannot (Right r) = UnaryFailure r $ "Was not expecting to successfully parse"
 
-pos : Position
-pos = defaultPos Nothing
+pos : Record [('Position, Position)]
+pos = with Record ['Position := defaultPos Nothing]
+
+Eq (Record [('Position, Position)]) where
+  (==) a b = True
 
 specs : IO ()
 specs = spec $ do

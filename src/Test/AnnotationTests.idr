@@ -2,6 +2,7 @@ module AnnotationTests
 
 import Specdris.Spec
 import Minima.AST
+import Minima.Record
 import Minima.Whatever
 import Minima.Annotations
 import Minima.Parsing.Parser
