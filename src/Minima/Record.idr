@@ -25,3 +25,11 @@ namespace Record
     getField : (field : lbl) -> Record xs  ->
              {default tactics { search } prf : FieldType field xs t} -> t
     getField f rec {prf} = getField' f rec prf
+
+    updateField' : (field : lbl) -> (newVal : t) -> Record xs -> FieldType field xs t -> Record xs
+    updateField' field newVal (_ :: xs) First = (field := newVal) :: xs
+    updateField' field newVal (x :: xs) (Later y) = x :: updateField' field newVal xs y
+
+    updateField : (field : lbl) -> (newVal : t) -> Record xs ->
+                  { default tactics { search } prf : FieldType field xs t } -> Record xs
+    updateField field newVal rec { prf } = updateField' field newVal rec prf
