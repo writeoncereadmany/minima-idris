@@ -2,7 +2,6 @@ module Interpreter
 
 import Minima.AST
 import Minima.Annotators.Annotations
-import Minima.Whatever
 import public Minima.Interpreter.Value
 import public Minima.Interpreter.InterpreterState
 import Lens
@@ -74,8 +73,8 @@ mutual
                   interpretCall
                   interpretGroup
 
-interpret : (Eq n, Show n, Whatever n) => ProgramState i n -> Expression a n -> ProgramState i n
+interpret : (Eq n, Show n) => ProgramState i n -> Expression a n -> ProgramState i n
 interpret st expression = foldExpression interpreter st (stripAnnotations expression)
 
-runProgram : (Eq n, Show n, Whatever n) => InterpreterState i n -> List (Expression a n) -> ProgramState i n
+runProgram : (Eq n, Show n) => InterpreterState i n -> List (Expression a n) -> ProgramState i n
 runProgram prelude = foldl interpret (pure prelude)

@@ -5,14 +5,11 @@ import Minima.Interpreter.Interpreter
 import Test.Support.MockInteraction
 import Minima.Parsing.Parser
 import Minima.AST
-import Minima.Whatever
 import Minima.Record
 import Lightyear.Position
 import Lightyear.Strings
 import Lens
 
-Whatever String where
-  whatever = ""
 
 plus : Value a String
 plus = NativeFunction doPlus where

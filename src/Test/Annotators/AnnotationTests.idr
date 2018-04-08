@@ -3,7 +3,6 @@ module AnnotationTests
 import Specdris.Spec
 import Minima.AST
 import Minima.Record
-import Minima.Whatever
 import Minima.Annotators.Annotations
 import Minima.Parsing.Parser
 import Test.Support.EitherResults
@@ -12,9 +11,6 @@ import Lightyear.Position
 import Lightyear
 
 %access export
-
-Whatever String where
-  whatever = ""
 
 specs : IO ()
 specs = spec $ do

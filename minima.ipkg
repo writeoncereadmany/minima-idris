@@ -5,7 +5,6 @@ sourcedir = src
 pkgs = specdris, lightyear, lens
 
 modules = Minima.AST
-        , Minima.Whatever
         , Minima.Record
         , Minima.Annotators.Annotations
         , Minima.Parsing.Parser
