@@ -11,12 +11,12 @@ import Lens
 
 record InterpreterState i n where
   constructor MkInterpreterState
-  _variables : Environment i n
+  _variables : Environment n (Value i n)
   _io : i
 
-variables : Lens (InterpreterState i n) (Environment i n)
+variables : Lens (InterpreterState i n) (Environment n (Value i n))
 variables = lens _variables setVariables where
-  setVariables : Environment i n -> InterpreterState i n -> InterpreterState i n
+  setVariables : Environment n (Value i n) -> InterpreterState i n -> InterpreterState i n
   setVariables vs st = record { _variables = vs } st
 
 io : Lens (InterpreterState i n) i
@@ -57,11 +57,11 @@ mutual
   interpret (StringLiteral _ text) = pure $ pure $ StringValue text
   interpret (NumberLiteral _ number) = pure $ pure $ NumberValue number
   interpret (Variable _ name) = do value <- lookupValue name <$> getL variables <$> get
-                                   pure value
+                                   pure $ (maybeToEither (show name ++ " is undefined")) value
   interpret (Definition _ name exp) = do (Right value) <- interpret exp
-                                           | (Left error) => pure (Left error)
+                                             | (Left error) => pure (Left error)
                                          modify (variables ^%= define name value)
-                                         pure $ Right value
+                                         pure $ Right Success
   interpret (Function _ args body) = pure $ pure $ FunctionValue args body
   interpret (Call _ fun args) = do (Right function) <- interpret fun
                                      | (Left error) => pure (Left error)

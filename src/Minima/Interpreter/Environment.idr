@@ -4,25 +4,25 @@ import Minima.Interpreter.Value
 
 %access public export
 
-Environment : Type -> Type -> Type
-Environment i n = List (List (n, Value i n))
+Environment : (key : Type) -> (value : Type) -> Type
+Environment key value = List (List (key, value))
 
-lookupValue : (Eq n, Show n) => n -> Environment i n -> Either String (Value i n)
+lookupValue : Eq k => k -> Environment k v -> Maybe v
 lookupValue name env = case catMaybes $ (lookup name) <$> env of
-                        [] => Left $ "Variable " ++ show name ++ " is undefined"
-                        (x :: xs) => Right x
+                        [] => Nothing
+                        (x :: xs) => Just x
 
-enterScope : Environment i n -> Environment i n
+enterScope : Environment k v -> Environment k v
 enterScope existingEnvironment = [] :: existingEnvironment
 
-exitScope : Environment i n -> Environment i n
+exitScope : Environment k v -> Environment k v
 exitScope [] = ?exitScope_rhs_1
 exitScope (currentScope :: higherScopes) = higherScopes
 
-define : n -> Value i n -> Environment i n -> Environment i n
+define : k -> v -> Environment k v -> Environment k v
 define x y [] = ?define_rhs_1
 define name value (currentScope :: higherScopes) = ((name, value) :: currentScope) :: higherScopes
 
-defineAll : List (n, Value i n) -> Environment i n -> Environment i n
+defineAll : List (k, v) -> Environment k v -> Environment k v
 defineAll [] env = env
-defineAll ((name, value) :: rest) env = define name value (defineAll rest env)
+defineAll ((key, value) :: rest) env = define key value (defineAll rest env)
