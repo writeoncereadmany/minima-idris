@@ -11,42 +11,8 @@ data Expression a i = StringLiteral a String
                     | Call a (Expression a i) (List (Expression a i))
                     | Group a (List (Expression a i))
 
-record ExpressionSemantics a i c where
-  constructor MkExpressionSemantics
-  onStringLiteral : c -> a -> String -> c
-  onNumberLiteral : c -> a -> Integer -> c
-  onVariable : c -> a -> i -> c
-  onDefinition : c -> a -> i -> c -> c
-  onFunction : c -> a -> List i -> Expression a i -> c
-  onCall : c -> a -> c -> List c -> c
-  onGroup : c -> a -> List c -> c
-
--- basically scanl, only it doesn't include the initial value
-accumulate : (a -> b -> a) -> a -> List b -> List a
-accumulate f x [] = []
-accumulate f x (y :: xs) = let next = f x y
-                            in next :: accumulate f next xs
-
-foldExpression : ExpressionSemantics a i c -> c -> Expression a i -> c
-foldExpression apply = foldOver where
-  foldOver context (StringLiteral a value) = onStringLiteral apply context a value
-  foldOver context (NumberLiteral a value) = onNumberLiteral apply context a value
-  foldOver context (Variable a name) = onVariable apply context a name
-  foldOver context (Definition a name value) = onDefinition apply context a name (foldOver context value)
-  foldOver context (Function a args body) = onFunction apply context a args body
-  foldOver context (Call a fun args) = let fContext = foldOver context fun
-                                           argContexts = accumulate foldOver fContext args
-                                        in onCall apply context a fContext argContexts
-  foldOver context (Group a exps) = onGroup apply context a (accumulate foldOver context exps)
-
-
 joinWith : String -> List String -> String
-joinWith sep [] = ""
-joinWith sep (x :: xs) = joinWith' xs x where
-  joinWith' : List String -> String -> String
-  joinWith' [] a = a
-  joinWith' (x :: xs) a = joinWith' xs (a ++ sep ++ x)
-
+joinWith sep strings = pack $ intercalate (unpack sep) (unpack <$> strings)
 
 Show i => Show (Expression a i) where
   show (StringLiteral a string) = "\"" ++ string ++ "\""
