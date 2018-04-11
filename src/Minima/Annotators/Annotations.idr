@@ -1,8 +1,6 @@
 module Annotations
 
 import Minima.AST
-import Minima.MonadSemantics
-import Control.Monad.State
 
 %access public export
 

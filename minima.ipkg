@@ -14,14 +14,13 @@ modules = Minima.AST
         , Minima.Types.Assignment
         , Minima.Types.Call
         , Minima.Types.Unification
-        , Minima.Interpreter.SimpleInterpreter
-        , Minima.Interpreter.SimpleInterpreterState
+        , Minima.Interpreter.Interpreter
+        , Minima.Interpreter.InterpreterState
         , Minima.Interpreter.Value
         , Test.Annotators.AnnotationTests
+        , Test.Interpreter.InterpreterTest
         , Test.Interpreter.MinimaPrelude
-        , Test.Interpreter.SimpleInterpreterTest
-        , Test.Interpreter.SimpleMinimaPrelude
-        , Test.Interpreter.SimpleFileTests
+        , Test.Interpreter.FileTests
         , Test.Parsing.ParserTest
         , Test.Types.AssignmentTest
         , Test.Support.EitherResults
@@ -33,5 +32,5 @@ tests = AssignmentTest.specs
       , UnificationTest.specs
       , ParserTest.specs
       , AnnotationTests.specs
-      , SimpleFileTests.specs
-      , SimpleInterpreterTest.specs
+      , FileTests.specs
+      , InterpreterTest.specs

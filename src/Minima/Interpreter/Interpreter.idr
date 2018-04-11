@@ -1,10 +1,10 @@
-module SimpleInterpreter
+module Interpreter
 
 import Minima.AST
 import Minima.Annotators.Annotations
 import Minima.Interpreter.Value
 import Minima.Interpreter.Environment
-import Minima.Interpreter.SimpleInterpreterState
+import Minima.Interpreter.InterpreterState
 import Control.Monad.State
 import Lens
 

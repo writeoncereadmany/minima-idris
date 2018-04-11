@@ -1,10 +1,10 @@
-module SimpleMinimaPrelude
+module MinimaPrelude
 
 import Minima.AST
 import Minima.Parsing.Parser
 import Minima.Interpreter.Environment
-import Minima.Interpreter.SimpleInterpreter
-import Minima.Interpreter.SimpleInterpreterState
+import Minima.Interpreter.Interpreter
+import Minima.Interpreter.InterpreterState
 import Minima.Interpreter.Interaction
 import Lightyear.Strings
 import Lightyear.Position

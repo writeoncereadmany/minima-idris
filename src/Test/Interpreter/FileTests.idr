@@ -1,7 +1,7 @@
-module SimpleFileTests
+module FileTests
 
-import Test.Interpreter.SimpleMinimaPrelude
-import Minima.Interpreter.SimpleInterpreter
+import Test.Interpreter.MinimaPrelude
+import Minima.Interpreter.Interpreter
 import Test.Support.MockInteraction
 import Specdris.SpecIO
 import Lens

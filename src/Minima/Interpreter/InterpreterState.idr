@@ -1,4 +1,4 @@
-module SimpleInterpreterState
+module InterpreterState
 
 import Minima.Interpreter.Environment
 import Minima.Interpreter.Value

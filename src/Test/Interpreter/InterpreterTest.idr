@@ -1,7 +1,7 @@
-module SimpleInterpreterTest
+module InterpreterTest
 
 import Test.Support.EitherResults
-import Test.Interpreter.SimpleMinimaPrelude
+import Test.Interpreter.MinimaPrelude
 import Specdris.Spec
 import Minima.Interpreter.Value
 
