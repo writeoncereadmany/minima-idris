@@ -23,6 +23,8 @@ modules = Minima.AST
         , Test.Interpreter.FileTests
         , Test.Interpreter.InterpreterTest
         , Test.Interpreter.SimpleInterpreterTest
+        , Test.Interpreter.SimpleMinimaPrelude
+        , Test.Interpreter.SimpleFileTests
         , Test.Parsing.ParserTest
         , Test.Types.AssignmentTest
         , Test.Support.EitherResults
@@ -34,6 +36,5 @@ tests = AssignmentTest.specs
       , UnificationTest.specs
       , ParserTest.specs
       , AnnotationTests.specs
-      , InterpreterTest.specs
-      , FileTests.specs
+      , SimpleFileTests.specs
       , SimpleInterpreterTest.specs
