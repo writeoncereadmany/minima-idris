@@ -14,15 +14,11 @@ modules = Minima.AST
         , Minima.Types.Assignment
         , Minima.Types.Call
         , Minima.Types.Unification
-        , Minima.Interpreter.Interpreter
         , Minima.Interpreter.SimpleInterpreter
-        , Minima.Interpreter.InterpreterState
         , Minima.Interpreter.SimpleInterpreterState
         , Minima.Interpreter.Value
         , Test.Annotators.AnnotationTests
         , Test.Interpreter.MinimaPrelude
-        , Test.Interpreter.FileTests
-        , Test.Interpreter.InterpreterTest
         , Test.Interpreter.SimpleInterpreterTest
         , Test.Interpreter.SimpleMinimaPrelude
         , Test.Interpreter.SimpleFileTests
