@@ -17,6 +17,7 @@ modules = Minima.AST
         , Minima.Interpreter.Interpreter
         , Minima.Interpreter.SimpleInterpreter
         , Minima.Interpreter.InterpreterState
+        , Minima.Interpreter.SimpleInterpreterState
         , Minima.Interpreter.Value
         , Test.Annotators.AnnotationTests
         , Test.Interpreter.MinimaPrelude

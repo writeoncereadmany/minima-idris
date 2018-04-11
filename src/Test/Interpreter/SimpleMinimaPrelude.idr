@@ -4,6 +4,7 @@ import Minima.AST
 import Minima.Parsing.Parser
 import Minima.Interpreter.Environment
 import Minima.Interpreter.SimpleInterpreter
+import Minima.Interpreter.SimpleInterpreterState
 import Minima.Interpreter.Interaction
 import Lightyear.Strings
 import Lightyear.Position
