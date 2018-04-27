@@ -97,7 +97,8 @@ specs = spec $ do
     it "cannot assign function where source arg subtype of target arg" $ do
       let id = Function [string] string
       let showMaybe = Function [maybeString] string
-      [] |=> id ->? showMaybe `yieldsTypeError` "Cannot assign (0, 2) to (0, 0)"
+      [] |=> id ->? showMaybe
+        `yieldsTypeError` "Cannot assign (0, 2) to (0, 0)"
     it "can assign function where source returns subtype of target return type" $ do
       let id = Function [string] string
       let verify = Function [string] maybeString
@@ -105,7 +106,8 @@ specs = spec $ do
     it "cannot assign function where source returns supertype of target return type" $ do
       let id = Function [string] string
       let verify = Function [string] maybeString
-      [] |=> verify ->? id `yieldsTypeError` "Cannot assign (0, 2) to (0, 0)"
+      [] |=> verify ->? id
+        `yieldsTypeError` "Cannot assign (0, 2) to (0, 0)"
 
   describe "Parameteric functions" $ do
     it "can assign generic function to concrete function if unbound args line up" $ do
