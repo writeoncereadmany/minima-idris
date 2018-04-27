@@ -51,49 +51,62 @@ specs : IO ()
 specs = spec $ do
   describe "Datatype assignments" $ do
     it "can assign data to itself" $ do
-      typechecksWhen $ [] |=> string ->? string
+      typechecksWhen $
+        [] |=> string ->? string
     it "cannot assign data to other data" $ do
-      [] |=> string ->? number `yieldsTypeError` "Cannot assign (0, 0) to (0, 1)"
+      [] |=> string ->? number
+        `yieldsTypeError` "Cannot assign (0, 0) to (0, 1)"
     it "can assign data to its alias" $ do
       let text = Named (1, 0)
       let bindings = [((1, 0), string)]
-      typechecksWhen $ bindings |=> string ->? text
+      typechecksWhen $
+        bindings |=> string ->? text
     it "can assign alias to its root type" $ do
       let text = Named (1, 0)
       let bindings = [((1, 0), string)]
-      typechecksWhen $ bindings |=> text ->? string
+      typechecksWhen $
+        bindings |=> text ->? string
     it "assigning to unbound binds it" $ do
       let param = Named (1, 0)
-      [] |=> string ->? param `yieldsBindings` [((1, 0), string)]
+      [] |=> string ->? param
+        `yieldsBindings` [((1, 0), string)]
 
   describe "Union assignments" $ do
     it "can assign member of union to union" $ do
-      typechecksWhen $ [] |=> string ->? maybeString
+      typechecksWhen $
+        [] |=> string ->? maybeString
     it "cannot assign union to member of union" $ do
-      [] |=> maybeString ->? string `yieldsTypeError` "Cannot assign (0, 2) to (0, 0)"
+      [] |=> maybeString ->? string
+        `yieldsTypeError` "Cannot assign (0, 2) to (0, 0)"
     it "can assign union to larger union" $ do
-      typechecksWhen $ [] |=> maybeString ->? maybeStringOrNumber
+      typechecksWhen $
+        [] |=> maybeString ->? maybeStringOrNumber
     it "cannot assign union to smaller union" $ do
-      [] |=> maybeStringOrNumber ->? maybeString `yieldsTypeErrors` ["Cannot assign (0, 1) to (0, 0)", "Cannot assign (0, 1) to (0, 2)"]
+      [] |=> maybeStringOrNumber ->? maybeString
+        `yieldsTypeErrors` ["Cannot assign (0, 1) to (0, 0)", "Cannot assign (0, 1) to (0, 2)"]
 
   describe "Function assignments" $ do
     it "can assign function to itself" $ do
       let fun = Function [number, number] number
-      typechecksWhen $ [] |=> fun ->? fun
+      typechecksWhen $
+        [] |=> fun ->? fun
     it "cannot assign functions where arguments differ" $ do
       let id = Function [number] number
       let length = Function [string] number
-      [] |=> id ->? length `yieldsTypeError` "Cannot assign (0, 0) to (0, 1)"
+      [] |=> id ->? length
+        `yieldsTypeError` "Cannot assign (0, 0) to (0, 1)"
     it "cannot assign functions where return types differ" $ do
       let id = Function [number] number
       let toString = Function [number] string
-      [] |=> id ->? toString `yieldsTypeError` "Cannot assign (0, 1) to (0, 0)"
+      [] |=> id ->? toString
+        `yieldsTypeError` "Cannot assign (0, 1) to (0, 0)"
 
   describe "Functions and subtyping" $ do
     it "can assign function where source arg supertype of target arg" $ do
       let id = Function [string] string
       let showMaybe = Function [maybeString] string
-      typechecksWhen $ [] |=> showMaybe ->? id
+      typechecksWhen $
+        [] |=> showMaybe ->? id
     it "cannot assign function where source arg subtype of target arg" $ do
       let id = Function [string] string
       let showMaybe = Function [maybeString] string
@@ -102,7 +115,8 @@ specs = spec $ do
     it "can assign function where source returns subtype of target return type" $ do
       let id = Function [string] string
       let verify = Function [string] maybeString
-      typechecksWhen $ [] |=> id ->? verify
+      typechecksWhen $
+        [] |=> id ->? verify
     it "cannot assign function where source returns supertype of target return type" $ do
       let id = Function [string] string
       let verify = Function [string] maybeString
@@ -113,11 +127,14 @@ specs = spec $ do
     it "can assign generic function to concrete function if unbound args line up" $ do
       let concrete = Function [string, number] number
       let parametric = Function [a, b] b
-      typechecksWhen $ [] |=> parametric ->? concrete
+      typechecksWhen $
+        [] |=> parametric ->? concrete
     it "cannot assign generic function to concrete function if unbound args to not line up" $ do
       let concrete = Function [string, number] number
       let parametric = Function [a, b] a
-      [] |=> parametric ->? concrete `yieldsTypeError` "Cannot assign (0, 0) to (0, 1)"
+      [] |=> parametric ->? concrete
+        `yieldsTypeError` "Cannot assign (0, 0) to (0, 1)"
     it "assigning args yields new bindings" $ do
       let param = Named (1, 0)
-      assignArgs [] [param] [string] `yieldsBindings` [((1, 0), string)]
+      assignArgs [] [param] [string]
+        `yieldsBindings` [((1, 0), string)]
