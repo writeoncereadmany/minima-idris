@@ -83,9 +83,10 @@ mutual
                   operations <- many call
                   pure $ foldl (\ex => \f => f ex) exp operations
 
-program : Parser (List Exp)
-program = do spaces
-             expressions <- list expression
+program : Parser Exp
+program = do pos <- notePosition
+             spaces
+             expressions <- commitTo $ list expression
              spaces
              eof
-             pure expressions
+             pure $ Group pos expressions

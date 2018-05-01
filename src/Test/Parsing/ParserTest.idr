@@ -48,16 +48,16 @@ specs = spec $ do
 
   describe "Can parse programs" $ do
     it "Can parse an empty program" $ do
-      parse program "" \@/ []
+      parse program "" \@/ Group pos []
     it "Can parse program with single expression" $ do
-      parse program "foo" \@/ [Variable pos "foo"]
+      parse program "foo" \@/ Group pos [Variable pos "foo"]
     it "Can parse program with single expression encased in whitespace" $ do
-      parse program "    foo    " \@/ [Variable pos "foo"]
+      parse program "    foo    " \@/ Group pos [Variable pos "foo"]
     it "Can parse program ending in newline" $ do
-      parse program "print['Hello, World!']\n" \@/ [Call pos (Variable pos "print") [StringLiteral pos "Hello, World!"]]
+      parse program "print['Hello, World!']\n" \@/ Group pos [Call pos (Variable pos "print") [StringLiteral pos "Hello, World!"]]
     it "Cannot parse program with random crap at the end" $ do
       cannot $ parse program "foo bar"
     it "Can parse program with multiple expressions" $ do
-      parse program "foo, bar" \@/ [Variable pos "foo", Variable pos "bar"]
+      parse program "foo, bar" \@/ Group pos [Variable pos "foo", Variable pos "bar"]
     it "Can parse program with multiple expressions separated by whitespace" $ do
-      parse program "   foo   ,\n  bar   " \@/ [Variable pos "foo", Variable pos "bar"]
+      parse program "   foo   ,\n  bar   " \@/ Group pos [Variable pos "foo", Variable pos "bar"]

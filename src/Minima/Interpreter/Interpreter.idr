@@ -62,7 +62,5 @@ mutual
        modify (variables ^%= exitScope)
        pure $ Right (lastOf results)
 
-runProgram : (Eq n, Show n) => List (Expression a n) -> State (InterpreterState i n) (Either String (Value i n))
-runProgram expressions =
-  do (Right results) <- inSequence (stripAnnotations <$> expressions) | (Left error) => pure (Left error)
-     pure $ Right (lastOf results)
+runProgram : (Eq n, Show n) => Expression a n -> State (InterpreterState i n) (Either String (Value i n))
+runProgram prog = interpret (stripAnnotations prog)
