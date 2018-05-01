@@ -2,7 +2,7 @@ package minima
 
 sourcedir = src
 
-pkgs = specdris, lightyear, lens
+pkgs = specdris, lightyear, lens, contrib
 
 modules = Minima.AST
         , Minima.Record

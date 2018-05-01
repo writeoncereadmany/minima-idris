@@ -3,7 +3,7 @@ module Record
 %access public export
 
 namespace Record
-  infix 5 :=
+  infix 8 :=
 
   data Field : lbl -> Type -> Type where
         (:=) : (field_label : lbl) ->
