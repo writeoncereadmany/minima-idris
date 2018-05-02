@@ -1,0 +1,18 @@
+state is current scope and next scope number in this scope:
+when we enter a scope, push next scope number to list and set next scope number to 0
+when we exit a scope, pop first scope number plus one into next scope number
+
+                    # scope []   ([], 0)
+"hello"             # also in scope []
+(                   # introduces scope [0] ([0], 0)
+  "hello"           # also in scope [0] ([0], 0)
+  [a] =>            # introduces scope [0, 0] ([0, 0], 0)
+    [b] =>          # introduces scope [0, 0, 0] ([0, 0, 0], 0)
+      [c] => a+b+c  # introduces scope [0, 0, 0, 0] ([0, 0, 0, 0], 0)
+  "hello"           # in scope [0] again ([0,0,0,0], 0) -> ([0, 0, 0], 1) -> ([0, 0], 1) -> ([0], 1)
+  [a] => a          # in scope [1, 0] ([1, 0], 0)
+)                   # ([0], 1)
+                    # ([], 1)
+(               # introduces scope [1]
+
+)
