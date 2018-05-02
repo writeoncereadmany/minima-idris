@@ -5,6 +5,8 @@ import Minima.AST
 import Minima.Record
 import Control.ST
 
+%access public export
+
 Scope : Type
 Scope = List Integer
 
@@ -62,3 +64,14 @@ mutual
   addAllScopes scope next (x :: xs) = do first <- addScopes scope next x
                                          rest <- addAllScopes scope next xs
                                          pure $ first :: rest
+
+doScope : Expression (Record as) i -> ST m (Scoped as i) []
+doScope exp = do next <- new 0
+                 current <- new []
+                 result <- addScopes current next exp
+                 delete current
+                 delete next
+                 pure result
+
+scope : Expression (Record as) i -> Scoped as i
+scope exp = runPure (runScope exp)
