@@ -28,30 +28,32 @@ exitScope current next = do (head :: rest) <- read current
                             write current rest
                             pure ()
 
-mutual
+withScope : Vect n Integer -> Record as -> Record (('Scope, Scope) :: as)
+withScope scope as = ('Scope := toList scope :: as)
 
+mutual
   addScopes : (current : Var)
            -> (next : Var)
            -> Expression (Record as) i
            -> ST m (Scoped as i) [current ::: State (Vect n Integer), next ::: State Integer]
-  addScopes scope next (StringLiteral as text) = pure $ StringLiteral ('Scope := toList !(read scope) :: as) text
-  addScopes scope next (NumberLiteral as num) = pure $ NumberLiteral ('Scope := toList !(read scope) :: as) num
-  addScopes scope next (Variable as name) = pure $ Variable ('Scope := toList !(read scope) :: as) name
+  addScopes scope next (StringLiteral as text) = pure $ StringLiteral (withScope !(read scope) as) text
+  addScopes scope next (NumberLiteral as num) = pure $ NumberLiteral (withScope !(read scope) as) num
+  addScopes scope next (Variable as name) = pure $ Variable (withScope !(read scope) as) name
   addScopes scope next (Definition as name value) = do val <- addScopes scope next value
-                                                       pure $ Definition ('Scope := toList !(read scope) :: as) name val
+                                                       pure $ Definition (withScope !(read scope) as) name val
   addScopes scope next (Function as args body) = do enterScope scope next
                                                     scope' <- read scope
                                                     body' <- addScopes scope next body
                                                     exitScope scope next
-                                                    pure $ Function ('Scope := toList scope' :: as) args body'
+                                                    pure $ Function (withScope scope' as) args body'
   addScopes scope next (Call as fun args) = do fun' <- addScopes scope next fun
                                                args' <- addAllScopes scope next args
-                                               pure $ Call ('Scope := toList !(read scope) :: as) fun' args'
+                                               pure $ Call (withScope !(read scope) as) fun' args'
   addScopes scope next (Group as exps) = do enterScope scope next
                                             scope' <- read scope
                                             exps' <- addAllScopes scope next exps
                                             exitScope scope next
-                                            pure $ Group ('Scope := toList scope' :: as) exps'
+                                            pure $ Group (withScope scope' as) exps'
   addAllScopes : (current : Var)
               -> (next : Var)
               -> List (Expression (Record as) i)
