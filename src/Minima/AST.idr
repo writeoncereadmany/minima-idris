@@ -23,6 +23,16 @@ Show i => Show (Expression a i) where
   show (Call a fun args) = show fun ++ show args
   show (Group a xs) = "(" ++ joinWith ", " (show <$> xs) ++ ")"
 
+annotations : Expression a i -> a
+annotations (StringLiteral x _) = x
+annotations (NumberLiteral x _) = x
+annotations (Variable x _) = x
+annotations (Definition x _ _) = x
+annotations (Function x _ _) = x
+annotations (Call x _ _) = x
+annotations (Group x _) = x
+
+
 mutual
   eq : (Eq i) => (a -> a -> Bool) -> Expression a i -> Expression a i -> Bool
   eq f (StringLiteral a x) (StringLiteral b y) = f a b && x == y
