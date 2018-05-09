@@ -74,4 +74,4 @@ doScope exp = do next <- new 0
                  pure result
 
 scope : Expression (Record as) i -> Scoped as i
-scope exp = runPure (runScope exp)
+scope exp = runPure (doScope exp)
