@@ -6,17 +6,17 @@ import Lens
 
 %access public export
 
-record InterpreterState i n where
+record InterpreterState a i n where
   constructor MkInterpreterState
-  _variables : Environment n (Value i n)
+  _variables : Environment n (Value a i n)
   _io : i
 
-variables : Lens (InterpreterState i n) (Environment n (Value i n))
+variables : Lens (InterpreterState a i n) (Environment n (Value a i n))
 variables = lens _variables setVariables where
-  setVariables : Environment n (Value i n) -> InterpreterState i n -> InterpreterState i n
+  setVariables : Environment n (Value a i n) -> InterpreterState a i n -> InterpreterState a i n
   setVariables vs st = record { _variables = vs } st
 
-io : Lens (InterpreterState i n) i
+io : Lens (InterpreterState a i n) i
 io = lens _io setIo where
-  setIo : i -> InterpreterState i n -> InterpreterState i n
+  setIo : i -> InterpreterState a i n -> InterpreterState a i n
   setIo i st = record { _io = i } st

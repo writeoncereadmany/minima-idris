@@ -10,7 +10,7 @@ import Lens
 
 %access public export
 
-lastOf : List (Value i n) -> Value i n
+lastOf : List (Value a i n) -> Value a i n
 lastOf [] = Success
 lastOf vals@(_ :: _) = last vals
 
@@ -19,15 +19,15 @@ always = pure . pure
 
 mutual
   inSequence : (Eq n, Show n) =>
-               List (Expression () n) ->
-               State (InterpreterState i n) (Either String (List (Value i n)))
+               List (Expression a n) ->
+               State (InterpreterState a i n) (Either String (List (Value a i n)))
   inSequence [] = pure $ Right []
   inSequence (x :: xs) = do
        (Right first) <- interpret x | (Left error) => pure (Left error)
        (Right rest) <- inSequence xs | (Left error) => pure (Left error)
        pure $ Right (first :: rest)
 
-  invoke : (Eq n, Show n) => Value i n -> List (Value i n) -> State (InterpreterState i n) (Either String (Value i n))
+  invoke : (Eq n, Show n) => Value a i n -> List (Value a i n) -> State (InterpreterState a i n) (Either String (Value a i n))
   invoke (FunctionValue params body) args = do
        modify (variables ^%= enterScope)
        modify (variables ^%= defineAll (zip params args))
@@ -41,7 +41,7 @@ mutual
        pure $ Right val
   invoke val _ = pure $ Left $ show val ++ " is not callable"
 
-  interpret : (Eq n, Show n) => Expression () n -> State (InterpreterState i n) (Either String (Value i n))
+  interpret : (Eq n, Show n) => Expression a n -> State (InterpreterState a i n) (Either String (Value a i n))
   interpret (StringLiteral _ text) = always $ StringValue text
   interpret (NumberLiteral _ number) = always $ NumberValue number
   interpret (Function _ args body) = always $ FunctionValue args body
@@ -62,5 +62,5 @@ mutual
        modify (variables ^%= exitScope)
        pure $ Right (lastOf results)
 
-runProgram : (Eq n, Show n) => Expression a n -> State (InterpreterState i n) (Either String (Value i n))
-runProgram prog = interpret (stripAnnotations prog)
+runProgram : (Eq n, Show n) => Expression a n -> State (InterpreterState a i n) (Either String (Value a i n))
+runProgram prog = interpret prog
