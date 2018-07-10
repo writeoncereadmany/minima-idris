@@ -2,7 +2,7 @@ module Parser
 
 import Lightyear
 import Lightyear.Strings
-import LightYear.Char
+import Lightyear.Char
 import Lightyear.Position
 import Minima.AST
 import Minima.Record

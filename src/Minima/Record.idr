@@ -31,5 +31,5 @@ namespace Record
     updateField' field newVal (x :: xs) (Later y) = x :: updateField' field newVal xs y
 
     updateField : (field : lbl) -> (newVal : t) -> Record xs ->
-                  { default tactics { search } prf : FieldType field xs t } -> Record xs
+                  { auto prf : FieldType field xs t } -> Record xs
     updateField field newVal rec { prf } = updateField' field newVal rec prf
