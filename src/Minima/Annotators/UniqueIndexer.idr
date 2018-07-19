@@ -5,6 +5,8 @@ import Control.ST
 import Data.Vect
 import Minima.Interpreter.DependentEnvironment
 
+%access public export
+
 NameError:  Type
 NameError = String
 

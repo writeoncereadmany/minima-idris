@@ -8,6 +8,7 @@ modules = Minima.AST
         , Minima.Record
         , Minima.Annotators.Annotations
         , Minima.Annotators.Scoper
+        , Minima.Annotators.UniqueIndexer
         , Minima.Parsing.Parser
         , Minima.Types.MinimaTypes
         , Minima.Types.Bindings
@@ -18,7 +19,9 @@ modules = Minima.AST
         , Minima.Interpreter.Interpreter
         , Minima.Interpreter.InterpreterState
         , Minima.Interpreter.Value
+        -- test cases
         , Test.Annotators.AnnotationTests
+        , Test.Annotators.UniqueIndexerTests
         , Test.Interpreter.InterpreterTest
         , Test.Interpreter.MinimaPrelude
         , Test.Interpreter.FileTests
@@ -35,3 +38,4 @@ tests = AssignmentTest.specs
       , AnnotationTests.specs
       , FileTests.specs
       , InterpreterTest.specs
+      , UniqueIndexerTests.specs
