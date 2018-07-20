@@ -51,3 +51,6 @@ specs = spec $ do
 
     it "Introduces new indices with new scopes" $ do
       "a is 5, (a, a is 6, a, [a] => a)[a]" ~~ "a is 5, (a, b is 6, b, [c] => c)[a]"
+
+    it "Shadows previous declarations within a given scope" $ do
+      "a is 5, a, a is 6, a, a is 1, a" ~~ "a is 5, a, b is 6, b, c is 1, c"
