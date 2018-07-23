@@ -15,16 +15,35 @@ data MType = MString
 Typed : List (Type, Type) -> Type -> Type
 Typed as index = Expression (Record (('MTyp, MType) :: as)) index
 
+lookupType : Index -> List (Index, MType) -> MType
+lookupType i is = case lookup i is of
+  Nothing => MTypeError $ "Cannot find type for variable index " ++ show i
+  (Just type) => type
+
+typeOf : Typed as index -> MType
+typeOf exp = getField 'MTyp (annotations exp)
+
 addTypes : (types : Var)
         -> Expression (Record as) Index
         -> ST m (Typed as Index) [types ::: State (List (Index, MType))]
 addTypes types (StringLiteral as text) = pure $ StringLiteral ('MTyp := MString :: as) text
 addTypes types (NumberLiteral as num) = pure $ NumberLiteral ('MTyp := MNumber :: as) num
-addTypes types (Variable as name) = ?addTypes_rhs_3
-addTypes types (Definition x y z) = ?addTypes_rhs_4
-addTypes types (Function x xs y) = ?addTypes_rhs_5
-addTypes types (Call x y xs) = ?addTypes_rhs_6
-addTypes types (Group x xs) = ?addTypes_rhs_7
+addTypes types (Variable as name) = do typeList <- read types
+                                       let type = lookupType name typeList
+                                       pure $ Variable ('MTyp := type :: as) name
+addTypes types (Definition as name value) = do value' <- addTypes types value
+                                               let type = typeOf value'
+                                               update types ((name, type) ::)
+                                               pure $ Definition ('MTyp := MSuccess :: as) name value'
+addTypes types (Function as args body) = do let paramTypes = (\x => (x, MUnbound x)) <$> args
+                                            let params = snd <$> paramTypes
+                                            update types (paramTypes ++)
+                                            body' <- addTypes types body
+                                            let type = MFunction params (typeOf body')
+                                            pure $ Function ('MTyp := type :: as) args body'
+-- call is the tricky one: this is where we need to unify types
+addTypes types (Call as fun args) = ?addTypes_rhs_6
+addTypes types (Group x xs) = ?hole
 
 typeExp' : Expression (Record as) Index -> ST m (Typed as Index) []
 typeExp' exp = do types <- new []
