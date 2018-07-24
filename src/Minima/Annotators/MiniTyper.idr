@@ -20,9 +20,7 @@ lookupType i is = case lookup i is of
   Nothing => MTypeError $ "Cannot find type for variable index " ++ show i
   (Just type) => type
 
-typeOf : Expression (Record as) index
-      -> { auto prf : FieldType 'MTyp as MType } 
-      -> MType
+typeOf : Typed as i -> MType
 typeOf exp = getField 'MTyp (annotations exp)
 
 mutual
@@ -47,7 +45,9 @@ mutual
   -- call is the tricky one: this is where we need to unify types, and the only stage we can get type errors
   addTypes types (Call as fun args) = do fun' <- addTypes types fun
                                          args' <- addAllTypes types args
-                                         ?hole2
+                                         let funtype = typeOf fun'
+                                         let argtypes = typeOf <$> args'
+                                         ?hole2432
   addTypes types (Group x xs) = ?hole
 
   addAllTypes : (types : Var)
