@@ -12,6 +12,16 @@ data MType = MString
            | MUnbound Index
            | MTypeError String
 
+Show MType where
+  show MString = "String"
+  show MNumber = "Number"
+  show MSuccess = "Success"
+  show (MUnbound x) = "Unbound " ++ show x
+  show (MTypeError x) = "Type Error: " ++ x
+  show (MFunction xs x) = let args = show <$> xs
+                              returnValue = show x
+                           in show args ++ " -> " ++ returnValue
+
 Typed : List (Type, Type) -> Type -> Type
 Typed as index = Expression (Record (('MTyp, MType) :: as)) index
 
@@ -22,6 +32,9 @@ lookupType i is = case lookup i is of
 
 typeOf : Typed as i -> MType
 typeOf exp = getField 'MTyp (annotations exp)
+
+unify : MType -> MType -> MType
+unify a b = ?unify_hole
 
 mutual
   addTypes : (types : Var)
@@ -47,8 +60,18 @@ mutual
                                          args' <- addAllTypes types args
                                          let funtype = typeOf fun'
                                          let argtypes = typeOf <$> args'
-                                         ?hole2432
-  addTypes types (Group x xs) = ?hole
+                                         let unified = unify funtype (MFunction argtypes (MUnbound (-1)))
+                                         ?call_hole
+  addTypes types (Group as exps) = do expressions <- addAllTypes types exps
+                                      let type = lastTypeUnlessNonSuccess (typeOf <$> expressions)
+                                      pure $ Group ('MTyp := type :: as) expressions
+
+  lastTypeUnlessNonSuccess : List MType -> MType
+  lastTypeUnlessNonSuccess [] = MSuccess
+  lastTypeUnlessNonSuccess [type] = type
+  lastTypeUnlessNonSuccess (MSuccess :: xs) = lastTypeUnlessNonSuccess xs
+  lastTypeUnlessNonSuccess (MTypeError msg :: _) = MTypeError msg
+  lastTypeUnlessNonSuccess (type :: _) = MTypeError $ "Return values of non-terminal group expressions must not be ignored: ignoring a " ++ show type
 
   addAllTypes : (types : Var)
              -> List (Expression (Record as) Index)
