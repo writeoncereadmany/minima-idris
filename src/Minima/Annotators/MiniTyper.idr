@@ -20,7 +20,9 @@ lookupType i is = case lookup i is of
   Nothing => MTypeError $ "Cannot find type for variable index " ++ show i
   (Just type) => type
 
-typeOf : Typed as index -> MType
+typeOf : Expression (Record as) index
+      -> { auto prf : FieldType 'MTyp as MType } 
+      -> MType
 typeOf exp = getField 'MTyp (annotations exp)
 
 mutual
