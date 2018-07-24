@@ -23,27 +23,39 @@ lookupType i is = case lookup i is of
 typeOf : Typed as index -> MType
 typeOf exp = getField 'MTyp (annotations exp)
 
-addTypes : (types : Var)
-        -> Expression (Record as) Index
-        -> ST m (Typed as Index) [types ::: State (List (Index, MType))]
-addTypes types (StringLiteral as text) = pure $ StringLiteral ('MTyp := MString :: as) text
-addTypes types (NumberLiteral as num) = pure $ NumberLiteral ('MTyp := MNumber :: as) num
-addTypes types (Variable as name) = do typeList <- read types
-                                       let type = lookupType name typeList
-                                       pure $ Variable ('MTyp := type :: as) name
-addTypes types (Definition as name value) = do value' <- addTypes types value
-                                               let type = typeOf value'
-                                               update types ((name, type) ::)
-                                               pure $ Definition ('MTyp := MSuccess :: as) name value'
-addTypes types (Function as args body) = do let paramTypes = (\x => (x, MUnbound x)) <$> args
-                                            let params = snd <$> paramTypes
-                                            update types (paramTypes ++)
-                                            body' <- addTypes types body
-                                            let type = MFunction params (typeOf body')
-                                            pure $ Function ('MTyp := type :: as) args body'
--- call is the tricky one: this is where we need to unify types
-addTypes types (Call as fun args) = ?addTypes_rhs_6
-addTypes types (Group x xs) = ?hole
+mutual
+  addTypes : (types : Var)
+          -> Expression (Record as) Index
+          -> ST m (Typed as Index) [types ::: State (List (Index, MType))]
+  addTypes types (StringLiteral as text) = pure $ StringLiteral ('MTyp := MString :: as) text
+  addTypes types (NumberLiteral as num) = pure $ NumberLiteral ('MTyp := MNumber :: as) num
+  addTypes types (Variable as name) = do typeList <- read types
+                                         let type = lookupType name typeList
+                                         pure $ Variable ('MTyp := type :: as) name
+  addTypes types (Definition as name value) = do value' <- addTypes types value
+                                                 let type = typeOf value'
+                                                 update types ((name, type) ::)
+                                                 pure $ Definition ('MTyp := MSuccess :: as) name value'
+  addTypes types (Function as args body) = do let paramTypes = (\x => (x, MUnbound x)) <$> args
+                                              let params = snd <$> paramTypes
+                                              update types (paramTypes ++)
+                                              body' <- addTypes types body
+                                              let type = MFunction params (typeOf body')
+                                              pure $ Function ('MTyp := type :: as) args body'
+  -- call is the tricky one: this is where we need to unify types, and the only stage we can get type errors
+  addTypes types (Call as fun args) = do fun' <- addTypes types fun
+                                         args' <- addAllTypes types args
+                                         ?hole2
+  addTypes types (Group x xs) = ?hole
+
+  addAllTypes : (types : Var)
+             -> List (Expression (Record as) Index)
+             -> ST m (List (Typed as Index)) [types ::: State (List (Index, MType))]
+  addAllTypes types [] = pure []
+  addAllTypes types (x :: xs) = do
+    first <- addTypes types x
+    rest <- addAllTypes types xs
+    pure $ first :: rest
 
 typeExp' : Expression (Record as) Index -> ST m (Typed as Index) []
 typeExp' exp = do types <- new []
