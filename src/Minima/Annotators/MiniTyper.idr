@@ -61,7 +61,7 @@ mutual
                                          let funtype = typeOf fun'
                                          let argtypes = typeOf <$> args'
                                          let unified = unify funtype (MFunction argtypes (MUnbound (-1)))
-                                         ?call_hole
+                                         pure $ Call ('MTyp := unified :: as) fun' args'
   addTypes types (Group as exps) = do expressions <- addAllTypes types exps
                                       let type = lastTypeUnlessNonSuccess (typeOf <$> expressions)
                                       pure $ Group ('MTyp := type :: as) expressions
@@ -71,7 +71,8 @@ mutual
   lastTypeUnlessNonSuccess [type] = type
   lastTypeUnlessNonSuccess (MSuccess :: xs) = lastTypeUnlessNonSuccess xs
   lastTypeUnlessNonSuccess (MTypeError msg :: _) = MTypeError msg
-  lastTypeUnlessNonSuccess (type :: _) = MTypeError $ "Return values of non-terminal group expressions must not be ignored: ignoring a " ++ show type
+  lastTypeUnlessNonSuccess (type :: _) = MTypeError
+    $ "Return values of non-terminal group expressions must not be ignored: ignoring a " ++ show type
 
   addAllTypes : (types : Var)
              -> List (Expression (Record as) Index)
