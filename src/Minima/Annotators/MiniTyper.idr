@@ -54,6 +54,9 @@ typeOf exp = getField 'MTyp (annotations exp)
 unify : MType -> MType -> MType
 unify MString MString = MString
 unify MNumber MNumber = MNumber
+unify MSuccess MSuccess = MSuccess
+unify (MTypeError a) _ = MTypeError a
+unify _ (MTypeError b) = MTypeError b
 unify (MUnbound _) b = b
 unify a (MUnbound _) = a
 unify a b = MTypeError $ "Cannot unify " ++ show a ++ " and " ++ show b

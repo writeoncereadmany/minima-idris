@@ -17,13 +17,21 @@ import Specdris.Spec
 specs : IO ()
 specs = spec $ do
   describe "Unifies two types" $ do
-    it "Two strings" $ do
+
+    it "Two matching datatypes" $ do
       unify MString MString === MString
-    it "Two numbers" $ do
       unify MNumber MNumber === MNumber
-    it "Unifying string and number yields a type error" $ do
+      unify MSuccess MSuccess === MSuccess
+
+    it "Unifying different data types yields a type error" $ do
       unify MString MNumber === MTypeError "Cannot unify String and Number"
+      unify MSuccess MString === MTypeError "Cannot unify Success and String"
+      unify MNumber MSuccess === MTypeError "Cannot unify Number and Success"
+
     it "Unifying any type with an Unbound yields that type" $ do
       unify MString (MUnbound 1) === MString
-    it "Unifying Unbound with any type yields that type" $ do
       unify (MUnbound 1) MSuccess === MSuccess
+
+    it "Unifying with a pre-existing type error perpetuates that error" $ do
+      unify (MTypeError "pre-existing") MString === MTypeError "pre-existing"
+      unify MString (MTypeError "pre-existing") === MTypeError "pre-existing"
