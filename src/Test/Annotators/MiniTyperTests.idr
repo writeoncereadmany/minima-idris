@@ -57,3 +57,9 @@ specs = spec $ do
       let concrete = MFunction [MNumber] MString
       unify generic concrete \@/ concrete
       unify concrete generic \@/ concrete
+
+    it "Bindings carry over across multiple references to the same unbound" $ do
+      let invocation = MFunction [MNumber] (MUnbound 4)
+      let generic = MFunction [MUnbound 1] (MUnbound 1)
+      let expected = MFunction [MNumber] MNumber
+      unify invocation generic \@/ expected
