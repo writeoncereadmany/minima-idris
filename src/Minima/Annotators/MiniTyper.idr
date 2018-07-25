@@ -77,7 +77,8 @@ mutual
   unifyFunctions args1 args2 ret1 ret2 = do
       when (length args1 /= length args2) (Left $ MkTypeError "Arity mismatch")
       args <- zipWithM unify args1 args2
-      pure $ MFunction args ret1
+      ret <- unify ret1 ret2
+      pure $ MFunction args ret
 
 {-
 mutual

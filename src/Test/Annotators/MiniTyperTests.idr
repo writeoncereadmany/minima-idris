@@ -46,3 +46,8 @@ specs = spec $ do
       let showNum = MFunction [MNumber] MString
       let showSuccess = MFunction [MSuccess] MString
       unify showNum showSuccess >.< MkTypeError "Cannot unify Number and Success"
+
+    it "Functions with different return types do not unify" $ do
+      let increment = MFunction [MNumber] MNumber
+      let showNumber = MFunction [MNumber] MString
+      unify increment showNumber >.< MkTypeError "Cannot unify Number and String"
