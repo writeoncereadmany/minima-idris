@@ -54,6 +54,15 @@ Typed as index = Expression (Record (('MTyp, MType) :: as)) index
 typeOf : Typed as i -> MType
 typeOf exp = getField 'MTyp (annotations exp)
 
+
+zipWithM : (Monad m) => (a -> b -> m c) -> List a -> List b -> m (List c)
+zipWithM f [] _ = pure []
+zipWithM f _ [] = pure []
+zipWithM f (x :: xs) (y :: ys) = do
+  first <- f x y
+  rest <- zipWithM f xs ys
+  pure $ first :: rest
+
 mutual
   unify : MType -> MType -> Either MTypeError MType
   unify MString MString = pure MString
@@ -67,8 +76,8 @@ mutual
   unifyFunctions : List MType -> List MType -> MType -> MType -> Either MTypeError MType
   unifyFunctions args1 args2 ret1 ret2 = do
       when (length args1 /= length args2) (Left $ MkTypeError "Arity mismatch")
-      pure $ MFunction args1 ret1
-      -- else Left $ MkTypeError ("Arity mismatch: Cannot unify " ++ show (MFunction args1 ret1) ++ " and " ++ show (MFunction args2 ret2))
+      args <- zipWithM unify args1 args2
+      pure $ MFunction args ret1
 
 {-
 mutual
