@@ -40,7 +40,7 @@ specs = spec $ do
     it "Functions with different arities do not unify" $ do
       let oneArg = MFunction [MNumber] MString
       let noArgs = MFunction [] MString
-      unify oneArg noArgs >.< MkTypeError "Arity mismatch: Cannot unify [Number] -> String and [] -> String"
+      unify oneArg noArgs >.< MkTypeError "Arity mismatch"
 
     it "Functions with different concrete argument types do not unify" $ do
       let showNum = MFunction [MNumber] MString

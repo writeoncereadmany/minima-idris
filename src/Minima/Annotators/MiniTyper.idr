@@ -65,10 +65,10 @@ mutual
   unify a b = Left $ MkTypeError $ "Cannot unify " ++ show a ++ " and " ++ show b
 
   unifyFunctions : List MType -> List MType -> MType -> MType -> Either MTypeError MType
-  unifyFunctions args1 args2 ret1 ret2 =
-      if length args1 == length args2
-      then pure $ MFunction args1 ret1
-      else Left $ MkTypeError ("Arity mismatch: Cannot unify " ++ show (MFunction args1 ret1) ++ " and " ++ show (MFunction args2 ret2))
+  unifyFunctions args1 args2 ret1 ret2 = do
+      when (length args1 /= length args2) (Left $ MkTypeError "Arity mismatch")
+      pure $ MFunction args1 ret1
+      -- else Left $ MkTypeError ("Arity mismatch: Cannot unify " ++ show (MFunction args1 ret1) ++ " and " ++ show (MFunction args2 ret2))
 
 {-
 mutual
