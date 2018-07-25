@@ -51,3 +51,9 @@ specs = spec $ do
       let increment = MFunction [MNumber] MNumber
       let showNumber = MFunction [MNumber] MString
       unify increment showNumber >.< MkTypeError "Cannot unify Number and String"
+
+    it "Functions with unbound arguments get bound when unifying with concrete functions" $ do
+      let generic = MFunction [MUnbound 1] (MUnbound 2)
+      let concrete = MFunction [MNumber] MString
+      unify generic concrete \@/ concrete
+      unify concrete generic \@/ concrete
