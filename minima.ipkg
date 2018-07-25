@@ -21,6 +21,7 @@ modules = Minima.AST
         , Minima.Interpreter.Value
         -- test cases
         , Test.Annotators.AnnotationTests
+        , Test.Annotators.MiniTyperTests
         , Test.Annotators.UniqueIndexerTests
         , Test.Interpreter.InterpreterTest
         , Test.Interpreter.MinimaPrelude
@@ -39,3 +40,4 @@ tests = AssignmentTest.specs
       , FileTests.specs
       , InterpreterTest.specs
       , UniqueIndexerTests.specs
+      , MiniTyperTests.specs

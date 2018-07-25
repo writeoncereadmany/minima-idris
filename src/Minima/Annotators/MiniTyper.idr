@@ -5,12 +5,30 @@ import Minima.Record
 import Minima.Annotators.UniqueIndexer
 import Control.ST
 
+%access public export
+
 data MType = MString
            | MNumber
            | MSuccess
            | MFunction (List MType) MType
            | MUnbound Index
            | MTypeError String
+
+mutual
+  Eq MType where
+    (==) MString MString = True
+    (==) MNumber MNumber = True
+    (==) MSuccess MSuccess = True
+    (==) (MUnbound x) (MUnbound y) = x == y
+    (==) (MTypeError x) (MTypeError y) = x == y
+    (==) (MFunction args1 ret1) (MFunction args2 ret2) = allEq args1 args2 && ret1 == ret2
+    (==) _ _ = False
+
+  allEq : List MType -> List MType -> Bool
+  allEq [] [] = True
+  allEq [] (_ :: _) = False
+  allEq (_ :: _) [] = False
+  allEq (x :: xs) (y :: ys) = x == y && allEq xs ys
 
 Show MType where
   show MString = "String"
@@ -34,7 +52,11 @@ typeOf : Typed as i -> MType
 typeOf exp = getField 'MTyp (annotations exp)
 
 unify : MType -> MType -> MType
-unify a b = ?unify_hole
+unify MString MString = MString
+unify MNumber MNumber = MNumber
+unify (MUnbound _) b = b
+unify a (MUnbound _) = a
+unify a b = MTypeError $ "Cannot unify " ++ show a ++ " and " ++ show b
 
 mutual
   addTypes : (types : Var)
