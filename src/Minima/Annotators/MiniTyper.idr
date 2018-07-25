@@ -12,7 +12,8 @@ data MType = MString
            | MSuccess
            | MFunction (List MType) MType
            | MUnbound Index
-           | MTypeError String
+
+data MTypeError = MkTypeError String
 
 mutual
   Eq MType where
@@ -20,7 +21,6 @@ mutual
     (==) MNumber MNumber = True
     (==) MSuccess MSuccess = True
     (==) (MUnbound x) (MUnbound y) = x == y
-    (==) (MTypeError x) (MTypeError y) = x == y
     (==) (MFunction args1 ret1) (MFunction args2 ret2) = allEq args1 args2 && ret1 == ret2
     (==) _ _ = False
 
@@ -30,44 +30,47 @@ mutual
   allEq (_ :: _) [] = False
   allEq (x :: xs) (y :: ys) = x == y && allEq xs ys
 
+Eq MTypeError where
+  (==) (MkTypeError a) (MkTypeError b) = a == b
+
 Show MType where
   show MString = "String"
   show MNumber = "Number"
   show MSuccess = "Success"
   show (MUnbound x) = "Unbound " ++ show x
-  show (MTypeError x) = "Type Error: " ++ x
   show (MFunction xs x) = show xs ++ " -> " ++ show x
+
+Show MTypeError where
+  show (MkTypeError x) = "Type Error: " ++ x
 
 Typed : List (Type, Type) -> Type -> Type
 Typed as index = Expression (Record (('MTyp, MType) :: as)) index
 
-lookupType : Index -> List (Index, MType) -> MType
-lookupType i is = case lookup i is of
-  Nothing => MTypeError $ "Cannot find type for variable index " ++ show i
-  (Just type) => type
+-- lookupType : Index -> List (Index, MType) -> MType
+-- lookupType i is = case lookup i is of
+--   Nothing => MkTypeError $ "Cannot find type for variable index " ++ show i
+--   (Just type) => type
 
 typeOf : Typed as i -> MType
 typeOf exp = getField 'MTyp (annotations exp)
 
 mutual
-  unify : MType -> MType -> MType
-  unify MString MString = MString
-  unify MNumber MNumber = MNumber
-  unify MSuccess MSuccess = MSuccess
-  unify (MTypeError a) _ = MTypeError a
-  unify _ (MTypeError b) = MTypeError b
-  unify (MUnbound _) b = b
-  unify a (MUnbound _) = a
+  unify : MType -> MType -> Either MTypeError MType
+  unify MString MString = pure MString
+  unify MNumber MNumber = pure MNumber
+  unify MSuccess MSuccess = pure MSuccess
+  unify (MUnbound _) b = pure b
+  unify a (MUnbound _) = pure a
   unify a@(MFunction args1 ret1) b@(MFunction args2 ret2) = unifyFunctions args1 args2 ret1 ret2
-  unify a b = MTypeError $ "Cannot unify " ++ show a ++ " and " ++ show b
+  unify a b = Left $ MkTypeError $ "Cannot unify " ++ show a ++ " and " ++ show b
 
-  unifyFunctions : List MType -> List MType -> MType -> MType -> MType
+  unifyFunctions : List MType -> List MType -> MType -> MType -> Either MTypeError MType
   unifyFunctions args1 args2 ret1 ret2 =
       if length args1 == length args2
-      then MFunction (zipWith unify args1 args2) (unify ret1 ret2)
-      else MTypeError ("Arity mismatch: Cannot unify " ++ show (MFunction args1 ret1) ++ " and " ++ show (MFunction args2 ret2))
+      then pure $ MFunction args1 ret1
+      else Left $ MkTypeError ("Arity mismatch: Cannot unify " ++ show (MFunction args1 ret1) ++ " and " ++ show (MFunction args2 ret2))
 
-
+{-
 mutual
   addTypes : (types : Var)
           -> Expression (Record as) Index
@@ -123,3 +126,4 @@ typeExp' exp = do types <- new []
 
 typeExp : Expression (Record as) Index -> Typed as Index
 typeExp exp = runPure $ typeExp' exp
+-}
