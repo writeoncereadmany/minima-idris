@@ -36,9 +36,7 @@ Show MType where
   show MSuccess = "Success"
   show (MUnbound x) = "Unbound " ++ show x
   show (MTypeError x) = "Type Error: " ++ x
-  show (MFunction xs x) = let args = show <$> xs
-                              returnValue = show x
-                           in show args ++ " -> " ++ returnValue
+  show (MFunction xs x) = show xs ++ " -> " ++ show x
 
 Typed : List (Type, Type) -> Type -> Type
 Typed as index = Expression (Record (('MTyp, MType) :: as)) index
@@ -51,15 +49,24 @@ lookupType i is = case lookup i is of
 typeOf : Typed as i -> MType
 typeOf exp = getField 'MTyp (annotations exp)
 
-unify : MType -> MType -> MType
-unify MString MString = MString
-unify MNumber MNumber = MNumber
-unify MSuccess MSuccess = MSuccess
-unify (MTypeError a) _ = MTypeError a
-unify _ (MTypeError b) = MTypeError b
-unify (MUnbound _) b = b
-unify a (MUnbound _) = a
-unify a b = MTypeError $ "Cannot unify " ++ show a ++ " and " ++ show b
+mutual
+  unify : MType -> MType -> MType
+  unify MString MString = MString
+  unify MNumber MNumber = MNumber
+  unify MSuccess MSuccess = MSuccess
+  unify (MTypeError a) _ = MTypeError a
+  unify _ (MTypeError b) = MTypeError b
+  unify (MUnbound _) b = b
+  unify a (MUnbound _) = a
+  unify a@(MFunction args1 ret1) b@(MFunction args2 ret2) = unifyFunctions args1 args2 ret1 ret2
+  unify a b = MTypeError $ "Cannot unify " ++ show a ++ " and " ++ show b
+
+  unifyFunctions : List MType -> List MType -> MType -> MType -> MType
+  unifyFunctions args1 args2 ret1 ret2 =
+      if length args1 == length args2
+      then MFunction (zipWith unify args1 args2) (unify ret1 ret2)
+      else MTypeError ("Arity mismatch: Cannot unify " ++ show (MFunction args1 ret1) ++ " and " ++ show (MFunction args2 ret2))
+
 
 mutual
   addTypes : (types : Var)
