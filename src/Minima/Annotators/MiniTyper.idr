@@ -43,16 +43,35 @@ Show MType where
 Show MTypeError where
   show (MkTypeError x) = "Type Error: " ++ x
 
-Typed : List (Type, Type) -> Type -> Type
-Typed as index = Expression (Record (('MTyp, MType) :: as)) index
+-- Typed : List (Type, Type) -> Type -> Type
+-- Typed as index = Expression (Record (('MTyp, MType) :: as)) index
 
--- lookupType : Index -> List (Index, MType) -> MType
--- lookupType i is = case lookup i is of
---   Nothing => MkTypeError $ "Cannot find type for variable index " ++ show i
---   (Just type) => type
+Binding : Type
+Binding = (Index, MType)
 
-typeOf : Typed as i -> MType
-typeOf exp = getField 'MTyp (annotations exp)
+Bindings : Type
+Bindings = List Binding
+
+lookupType : Index -> Bindings -> Either MTypeError MType
+lookupType i is = case lookup i is of
+  Nothing => Left $ MkTypeError $ "Cannot find type for variable index " ++ show i
+  (Just type) => pure type
+
+combine : Bindings -> Binding -> Either MTypeError Bindings
+combine bindings binding@(index, type) = case lookupType index bindings of
+  (Left l) => pure (binding :: bindings)
+  (Right boundType) => if type == boundType
+    then pure bindings
+    else Left $ MkTypeError $ "Type mismatch found"
+
+combineBindings: Bindings -> Bindings -> Either MTypeError Bindings
+combineBindings xs [] = pure $ xs
+combineBindings xs (y :: ys) = do
+  xs' <- combine xs y
+  combineBindings xs' ys
+
+-- typeOf : Typed as i -> MType
+-- typeOf exp = getField 'MTyp (annotations exp)
 
 
 zipWithM : (Monad m) => (a -> b -> m c) -> List a -> List b -> m (List c)
@@ -63,22 +82,43 @@ zipWithM f (x :: xs) (y :: ys) = do
   rest <- zipWithM f xs ys
   pure $ first :: rest
 
-mutual
-  unify : MType -> MType -> Either MTypeError MType
-  unify MString MString = pure MString
-  unify MNumber MNumber = pure MNumber
-  unify MSuccess MSuccess = pure MSuccess
-  unify (MUnbound _) b = pure b
-  unify a (MUnbound _) = pure a
-  unify a@(MFunction args1 ret1) b@(MFunction args2 ret2) = unifyFunctions args1 args2 ret1 ret2
-  unify a b = Left $ MkTypeError $ "Cannot unify " ++ show a ++ " and " ++ show b
+liftBindings : List (Bindings, MType) -> Either MTypeError (Bindings, List MType)
+liftBindings [] = pure $ ([], [])
+liftBindings [(b1, t1), (b2, t2)] = do
+  bindings <- combineBindings b1 b2
+  pure (bindings, [t1, t2])
+liftBindings ((b1, t1) :: xs) = do
+  (b2, t2) <- liftBindings xs
+  bindings <- combineBindings b1 b2
+  pure (bindings, t1 :: t2)
 
-  unifyFunctions : List MType -> List MType -> MType -> MType -> Either MTypeError MType
-  unifyFunctions args1 args2 ret1 ret2 = do
+mutual
+  unify : Bindings -> MType -> MType -> Either MTypeError (Bindings, MType)
+  unify _ MString MString = pure ([], MString)
+  unify _ MNumber MNumber = pure ([], MNumber)
+  unify _ MSuccess MSuccess = pure ([], MSuccess)
+  unify _ (MUnbound i) b = pure ([(i, b)], b)
+  unify _ a (MUnbound i) = pure ([(i, a)], a)
+  unify bs a@(MFunction args1 ret1) b@(MFunction args2 ret2) = unifyFunctions bs args1 args2 ret1 ret2
+  unify _ a b = Left $ MkTypeError $ "Cannot unify " ++ show a ++ " and " ++ show b
+
+  unifyFunctions : Bindings -> List MType -> List MType -> MType -> MType -> Either MTypeError (Bindings, MType)
+  unifyFunctions b args1 args2 ret1 ret2 = do
       when (length args1 /= length args2) (Left $ MkTypeError "Arity mismatch")
-      args <- zipWithM unify args1 args2
-      ret <- unify ret1 ret2
-      pure $ MFunction args ret
+      argsAndBindings <- zipWithM (unify b) args1 args2
+      (b1, args) <- liftBindings argsAndBindings
+      (b2, ret) <- unify b ret1 ret2
+      bindings <- combineBindings b1 b2
+      let boundArgs = instantiate bindings <$> args
+      let boundRet = instantiate bindings ret
+      pure $ (b, MFunction boundArgs boundRet)
+
+  instantiate : Bindings -> MType -> MType
+  instantiate [] unbound@(MUnbound y) = unbound
+  instantiate ((index, type) :: bindings) unbound@(MUnbound y) = if index == y
+    then type
+    else instantiate bindings unbound
+  instantiate x type = type
 
 {-
 mutual
