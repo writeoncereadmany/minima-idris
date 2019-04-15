@@ -62,7 +62,12 @@ combine bindings binding@(index, type) = case lookupType index bindings of
   (Left l) => pure (binding :: bindings)
   (Right boundType) => if type == boundType
     then pure bindings
-    else Left $ MkTypeError $ "Type mismatch found"
+    else Left $ MkTypeError $ "Type mismatch found: trying to bind both "
+                           ++ show type
+                           ++ " and "
+                           ++ show boundType
+                           ++ " to "
+                           ++ show index
 
 combineBindings: Bindings -> Bindings -> Either MTypeError Bindings
 combineBindings xs [] = pure $ xs

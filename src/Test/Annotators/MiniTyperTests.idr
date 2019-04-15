@@ -59,7 +59,10 @@ specs = spec $ do
       unify [] concrete generic \@/ ([], concrete)
 
     it "Bindings carry over across multiple references to the same unbound" $ do
-      let invocation = MFunction [MNumber] (MUnbound 4)
+      let invocation1 = MFunction [MNumber] (MUnbound 4)
+      let invocation2 = MFunction [MUnbound 3] MNumber
       let generic = MFunction [MUnbound 1] (MUnbound 1)
       let expected = MFunction [MNumber] MNumber
-      unify [] invocation generic \@/ ([], expected)
+      unify [] invocation1 generic \@/ ([], expected)
+      unify [] invocation2 generic \@/ ([], expected)
+      unify [] generic invocation1 \@/ ([], expected)
