@@ -24,9 +24,6 @@ bound (Bound indices type) = indices
 Bindings : Type
 Bindings = List Binding
 
-boundOverAny : List Index -> Binding -> Bool
-boundOverAny indices binding = any (`elem` bound binding) indices
-
 mergeBound : List Index -> Maybe MType -> Bindings -> Either MTypeError Binding
 mergeBound indices Nothing [] = pure $ Equivalent indices
 mergeBound indices (Just type) [] = pure $ Bound indices type
@@ -43,12 +40,11 @@ mergeBindings : List Index -> Maybe MType -> Bindings -> Either MTypeError Bindi
 mergeBindings indices type bindings = let
      (overlapping, disjoint) = partition (boundOverAny indices) bindings
   in [| mergeBound indices type overlapping :: pure disjoint |]
-
-equivalent : Index -> Index -> Bindings -> Either MTypeError Bindings
-equivalent index1 index2 bindings = mergeBindings [index1, index2] Nothing bindings
-
+  where boundOverAny : List Index -> Binding -> Bool
+        boundOverAny indices binding = any (`elem` bound binding) indices
 
 bindType : Index -> MType -> Bindings -> Either MTypeError Bindings
+bindType index1 (MUnbound index2) bindings = mergeBindings [index1, index2] Nothing bindings
 bindType index type bindings = mergeBindings [index] (Just type) bindings
 
 combineBinding : Binding -> Bindings -> Either MTypeError Bindings

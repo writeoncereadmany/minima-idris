@@ -41,21 +41,21 @@ specs = spec $ do
   describe "Multiple equivalent names for the same type" $ do
     it "With two indexes, either can access the other's bindings" $ do
       let retrievedType = do
-        bindings <- pure [] >>= equivalent 1 3 >>= bindType 1 MSuccess
+        bindings <- pure [] >>= bindType 1 (MUnbound 3) >>= bindType 1 MSuccess
         lookupMType bindings 3
       retrievedType \@/ MSuccess
     it "With multiple indexes, can access the other's bindings transitively" $ do
       let retrievedType = do
-        bindings <- pure [] >>= equivalent 1 3 >>= equivalent 3 5 >>= bindType 1 MSuccess
+        bindings <- pure [] >>= bindType 1 (MUnbound 3) >>= bindType 3 (MUnbound 5) >>= bindType 1 MSuccess
         lookupMType bindings 5
       retrievedType \@/ MSuccess
     it "Introducing an equivalence with one type already bound binds the other type too" $ do
       let retrievedType = do
-        bindings <- pure [] >>= bindType 1 MSuccess >>= equivalent 1 3
+        bindings <- pure [] >>= bindType 1 MSuccess >>= bindType 1 (MUnbound 3)
         lookupMType bindings 3
       retrievedType \@/ MSuccess
     it "Introducing an equivalence between two bound types which don't match is a type error" $ do
       let retrievedType = do
-        bindings <- pure [] >>= bindType 1 MSuccess >>= bindType 3 MString >>= equivalent 1 3
+        bindings <- pure [] >>= bindType 1 MSuccess >>= bindType 3 MString >>= bindType 1 (MUnbound 3)
         lookupMType bindings 3
       retrievedType >.< MkTypeError "Type mismatch: cannot unify String and Success"
