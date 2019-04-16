@@ -4,41 +4,13 @@ import Minima.AST
 import Minima.Record
 import Minima.Annotators.UniqueIndexer
 import Minima.Annotators.MTypes
+import Minima.Annotators.Bindings
 import Control.ST
 
 %access public export
 
 -- Typed : List (Type, Type) -> Type -> Type
 -- Typed as index = Expression (Record (('MTyp, MType) :: as)) index
-
-Binding : Type
-Binding = (Index, MType)
-
-Bindings : Type
-Bindings = List Binding
-
-lookupType : Index -> Bindings -> Either MTypeError MType
-lookupType i is = case lookup i is of
-  Nothing => Left $ MkTypeError $ "Cannot find type for variable index " ++ show i
-  (Just type) => pure type
-
-combine : Bindings -> Binding -> Either MTypeError Bindings
-combine bindings binding@(index, type) = case lookupType index bindings of
-  (Left l) => pure (binding :: bindings)
-  (Right boundType) => if type == boundType
-    then pure bindings
-    else Left $ MkTypeError $ "Type mismatch found: trying to bind both "
-                           ++ show type
-                           ++ " and "
-                           ++ show boundType
-                           ++ " to "
-                           ++ show index
-
-combineBindings: Bindings -> Bindings -> Either MTypeError Bindings
-combineBindings xs [] = pure $ xs
-combineBindings xs (y :: ys) = do
-  xs' <- combine xs y
-  combineBindings xs' ys
 
 -- typeOf : Typed as i -> MType
 -- typeOf exp = getField 'MTyp (annotations exp)
@@ -67,8 +39,10 @@ mutual
   unify _ MString MString = pure ([], MString)
   unify _ MNumber MNumber = pure ([], MNumber)
   unify _ MSuccess MSuccess = pure ([], MSuccess)
-  unify _ (MUnbound i) b = pure ([(i, b)], b)
-  unify _ a (MUnbound i) = pure ([(i, a)], a)
+  unify bindings (MUnbound i) b = do bindings' <- bindType i b bindings
+                                     pure (bindings', b)
+  unify bindings a (MUnbound i) = do bindings' <- bindType i a bindings
+                                     pure (bindings', a)
   unify bs a@(MFunction args1 ret1) b@(MFunction args2 ret2) = unifyFunctions bs args1 args2 ret1 ret2
   unify _ a b = Left $ MkTypeError $ "Cannot unify " ++ show a ++ " and " ++ show b
 
@@ -84,11 +58,10 @@ mutual
       pure $ (b, MFunction boundArgs boundRet)
 
   instantiate : Bindings -> MType -> MType
-  instantiate [] unbound@(MUnbound y) = unbound
-  instantiate ((index, type) :: bindings) unbound@(MUnbound y) = if index == y
-    then type
-    else instantiate bindings unbound
-  instantiate x type = type
+  instantiate bindings unbound@(MUnbound index) = case lookupMType bindings index of
+    (Left error) => unbound
+    (Right type) => type
+  instantiate bindings type = type
 
 {-
 mutual

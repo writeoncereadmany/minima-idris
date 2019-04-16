@@ -3,6 +3,7 @@ module MiniTyperTests
 import Minima.Annotators.MiniTyper
 import Minima.Annotators.MTypes
 import Minima.Annotators.UniqueIndexer
+import Minima.Annotators.Bindings
 import Test.Support.EitherResults
 
 import Specdris.Spec
@@ -24,8 +25,8 @@ specs = spec $ do
       unify [] MNumber MSuccess >.< MkTypeError "Cannot unify Number and Success"
 
     it "Unifying any type with an Unbound yields that type" $ do
-      unify [] MString (MUnbound 1) \@/ ([(1, MString)], MString)
-      unify [] (MUnbound 1) MSuccess \@/ ([(1, MSuccess)], MSuccess)
+      unify [] MString (MUnbound 1) \@/ ([Bound [1] MString], MString)
+      unify [] (MUnbound 1) MSuccess \@/ ([Bound [1] MSuccess], MSuccess)
 
     it "Concrete function unifies with itself" $ do
       let fun = MFunction [MNumber, MNumber] MNumber
