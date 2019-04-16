@@ -60,3 +60,5 @@ specs = spec $ do
       let expected = MFunction [MNumber] MNumber
       unify [] invocation1 generic \@/ ([], expected)
       unify [] invocation2 generic \@/ ([], expected)
+      unify [] generic invocation1 \@/ ([], expected)
+      unify [] generic invocation2 \@/ ([], expected)
