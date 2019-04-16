@@ -1,15 +1,8 @@
 module MiniTyperTests
 
-import Lightyear.Strings
-import Lightyear.Position
-import Lightyear
-
-import Minima.AST
-import Minima.Record
 import Minima.Annotators.MiniTyper
 import Minima.Annotators.MTypes
 import Minima.Annotators.UniqueIndexer
-import Minima.Parsing.Parser
 import Test.Support.EitherResults
 
 import Specdris.Spec
@@ -66,4 +59,3 @@ specs = spec $ do
       let expected = MFunction [MNumber] MNumber
       unify [] invocation1 generic \@/ ([], expected)
       unify [] invocation2 generic \@/ ([], expected)
-      unify [] generic invocation1 \@/ ([], expected)
