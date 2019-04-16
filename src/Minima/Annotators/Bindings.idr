@@ -17,18 +17,34 @@ Show Binding where
   show (Equivalent xs) = show xs
   show (Bound xs t) = show xs ++ " -> " ++ show t
 
+bound : Binding -> List Index
+bound (Equivalent indices) = indices
+bound (Bound indices type) = indices
+
 Bindings : Type
 Bindings = List Binding
 
+boundOverAny : List Index -> Binding -> Bool
+boundOverAny indices binding = any (`elem` bound binding) indices
+
+mergeBound : List Index -> Bindings -> Either MTypeError Binding
+mergeBound indices bindings = mergeBound' indices Nothing bindings where
+  mergeBound' : List Index -> Maybe MType -> Bindings -> Either MTypeError Binding
+  mergeBound' indices Nothing [] = pure $ Equivalent indices
+  mergeBound' indices (Just type) [] = pure $ Bound indices type
+  mergeBound' indices type ((Equivalent indices') :: bindings)
+      = mergeBound' (union indices indices') type bindings
+  mergeBound' indices Nothing ((Bound indices' type) :: bindings)
+      = mergeBound' (union indices indices') (Just type) bindings
+  mergeBound' indices (Just type) ((Bound indices' type') :: bindings)
+      = if type == type'
+        then mergeBound' (union indices indices') (Just type) bindings
+        else Left $ MkTypeError $ "Type mismatch: cannot unify " ++ show type ++ " and " ++ show type'
 
 equivalent : Index -> Index -> Bindings -> Either MTypeError Bindings
-equivalent index1 index2 bindings = equivalent' [index1, index2] bindings where
-  equivalent' : List Index -> Bindings -> Either MTypeError Bindings
-  equivalent' indices [] = pure [ Equivalent indices ]
-  equivalent' indices (head@(Equivalent indices') :: bindings) = if any (`elem` indices') indices
-    then equivalent' (union indices indices') bindings
-    else [| pure head :: equivalent' indices bindings |]
-  equivalent' indices ((Bound ys x) :: xs) = ?hole_3
+equivalent index1 index2 bindings = let
+     (bound, unbound) = partition (boundOverAny [index1, index2]) bindings
+  in [| mergeBound [index1, index2] bound :: pure unbound |]
 
 bindType : Index -> MType -> Bindings -> Either MTypeError Bindings
 bindType index type [] = pure $ [ Bound [ index ] type ]

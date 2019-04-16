@@ -49,3 +49,13 @@ specs = spec $ do
         bindings <- pure [] >>= equivalent 1 3 >>= equivalent 3 5 >>= bindType 1 MSuccess
         lookupMType bindings 5
       retrievedType \@/ MSuccess
+    it "Introducing an equivalence with one type already bound binds the other type too" $ do
+      let retrievedType = do
+        bindings <- pure [] >>= bindType 1 MSuccess >>= equivalent 1 3
+        lookupMType bindings 3
+      retrievedType \@/ MSuccess
+    it "Introducing an equivalence between two bound types which don't match is a type error" $ do
+      let retrievedType = do
+        bindings <- pure [] >>= bindType 1 MSuccess >>= bindType 3 MString >>= equivalent 1 3
+        lookupMType bindings 3
+      retrievedType >.< MkTypeError "Type mismatch: cannot unify Success and String"
