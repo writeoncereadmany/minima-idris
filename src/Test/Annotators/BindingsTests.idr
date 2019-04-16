@@ -31,7 +31,7 @@ specs = spec $ do
       let retrievedType = do
         bindings <- pure [] >>= bindType 1 MSuccess >>= bindType 1 MString
         lookupMType bindings 1
-      retrievedType >.< MkTypeError "Type mismatch for index 1: both String and Success bound."
+      retrievedType >.< MkTypeError "Type mismatch: cannot unify String and Success"
     it "Allows the same type to be bound to the same index multiple times" $ do
       let retrievedType = do
         bindings <- pure [] >>= bindType 1 MSuccess >>= bindType 1 MSuccess
@@ -58,4 +58,4 @@ specs = spec $ do
       let retrievedType = do
         bindings <- pure [] >>= bindType 1 MSuccess >>= bindType 3 MString >>= equivalent 1 3
         lookupMType bindings 3
-      retrievedType >.< MkTypeError "Type mismatch: cannot unify Success and String"
+      retrievedType >.< MkTypeError "Type mismatch: cannot unify String and Success"

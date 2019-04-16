@@ -49,15 +49,7 @@ equivalent index1 index2 bindings = mergeBindings [index1, index2] Nothing bindi
 
 
 bindType : Index -> MType -> Bindings -> Either MTypeError Bindings
-bindType index type [] = pure $ [ Bound [ index ] type ]
-bindType index type (head@(Equivalent indices) :: bindings) = if index `elem` indices
-  then pure $ Bound indices type :: bindings
-  else [| pure head :: bindType index type bindings |]
-bindType index type (head@(Bound indices type') :: bindings) = if index `elem` indices
-  then if type == type'
-     then pure $ head :: bindings
-     else Left $ MkTypeError $ "Type mismatch for index " ++ show index ++ ": both " ++ show type ++ " and " ++ show type' ++ " bound."
-  else [| pure head :: bindType index type bindings |]
+bindType index type bindings = mergeBindings [index] (Just type) bindings
 
 combineBinding : Binding -> Bindings -> Either MTypeError Bindings
 combineBinding (Equivalent indices) bindings = mergeBindings indices Nothing bindings
