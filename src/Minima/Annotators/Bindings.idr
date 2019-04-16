@@ -27,24 +27,26 @@ Bindings = List Binding
 boundOverAny : List Index -> Binding -> Bool
 boundOverAny indices binding = any (`elem` bound binding) indices
 
-mergeBound : List Index -> Bindings -> Either MTypeError Binding
-mergeBound indices bindings = mergeBound' indices Nothing bindings where
-  mergeBound' : List Index -> Maybe MType -> Bindings -> Either MTypeError Binding
-  mergeBound' indices Nothing [] = pure $ Equivalent indices
-  mergeBound' indices (Just type) [] = pure $ Bound indices type
-  mergeBound' indices type ((Equivalent indices') :: bindings)
-      = mergeBound' (union indices indices') type bindings
-  mergeBound' indices Nothing ((Bound indices' type) :: bindings)
-      = mergeBound' (union indices indices') (Just type) bindings
-  mergeBound' indices (Just type) ((Bound indices' type') :: bindings)
-      = if type == type'
-        then mergeBound' (union indices indices') (Just type) bindings
-        else Left $ MkTypeError $ "Type mismatch: cannot unify " ++ show type ++ " and " ++ show type'
+mergeBound : List Index -> Maybe MType -> Bindings -> Either MTypeError Binding
+mergeBound indices Nothing [] = pure $ Equivalent indices
+mergeBound indices (Just type) [] = pure $ Bound indices type
+mergeBound indices type ((Equivalent indices') :: bindings)
+    = mergeBound (union indices indices') type bindings
+mergeBound indices Nothing ((Bound indices' type) :: bindings)
+    = mergeBound (union indices indices') (Just type) bindings
+mergeBound indices (Just type) ((Bound indices' type') :: bindings)
+    = if type == type'
+      then mergeBound (union indices indices') (Just type) bindings
+      else Left $ MkTypeError $ "Type mismatch: cannot unify " ++ show type ++ " and " ++ show type'
+
+mergeBindings : List Index -> Maybe MType -> Bindings -> Either MTypeError Bindings
+mergeBindings indices type bindings = let
+     (overlapping, disjoint) = partition (boundOverAny indices) bindings
+  in [| mergeBound indices type overlapping :: pure disjoint |]
 
 equivalent : Index -> Index -> Bindings -> Either MTypeError Bindings
-equivalent index1 index2 bindings = let
-     (bound, unbound) = partition (boundOverAny [index1, index2]) bindings
-  in [| mergeBound [index1, index2] bound :: pure unbound |]
+equivalent index1 index2 bindings = mergeBindings [index1, index2] Nothing bindings
+
 
 bindType : Index -> MType -> Bindings -> Either MTypeError Bindings
 bindType index type [] = pure $ [ Bound [ index ] type ]
@@ -56,6 +58,13 @@ bindType index type (head@(Bound indices type') :: bindings) = if index `elem` i
      then pure $ head :: bindings
      else Left $ MkTypeError $ "Type mismatch for index " ++ show index ++ ": both " ++ show type ++ " and " ++ show type' ++ " bound."
   else [| pure head :: bindType index type bindings |]
+
+combineBinding : Binding -> Bindings -> Either MTypeError Bindings
+combineBinding (Equivalent indices) bindings = mergeBindings indices Nothing bindings
+combineBinding (Bound indices type) bindings = mergeBindings indices (Just type) bindings
+
+combineBindings : Bindings -> Bindings -> Either MTypeError Bindings
+combineBindings x y = ?combineBindings_rhs
 
 lookupMType : Bindings -> Index -> Either MTypeError MType
 lookupMType [] index = Left $ MkTypeError $ "Index " ++ show index ++ " not bound"
