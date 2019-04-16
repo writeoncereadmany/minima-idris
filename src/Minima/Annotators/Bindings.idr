@@ -47,12 +47,12 @@ bindType : Index -> MType -> Bindings -> Either MTypeError Bindings
 bindType index1 (MUnbound index2) bindings = mergeBindings [index1, index2] Nothing bindings
 bindType index type bindings = mergeBindings [index] (Just type) bindings
 
-combineBinding : Binding -> Bindings -> Either MTypeError Bindings
-combineBinding (Equivalent indices) bindings = mergeBindings indices Nothing bindings
-combineBinding (Bound indices type) bindings = mergeBindings indices (Just type) bindings
+combineBinding : Bindings -> Binding -> Either MTypeError Bindings
+combineBinding bindings (Equivalent indices) = mergeBindings indices Nothing bindings
+combineBinding bindings (Bound indices type) = mergeBindings indices (Just type) bindings
 
 combineBindings : Bindings -> Bindings -> Either MTypeError Bindings
-combineBindings x y = ?combineBindings_rhs
+combineBindings bindings1 bindings2 = foldlM combineBinding bindings1 bindings2
 
 lookupMType : Bindings -> Index -> Either MTypeError MType
 lookupMType [] index = Left $ MkTypeError $ "Index " ++ show index ++ " not bound"
