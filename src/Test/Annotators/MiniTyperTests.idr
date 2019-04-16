@@ -7,6 +7,7 @@ import Lightyear
 import Minima.AST
 import Minima.Record
 import Minima.Annotators.MiniTyper
+import Minima.Annotators.MTypes
 import Minima.Annotators.UniqueIndexer
 import Minima.Parsing.Parser
 import Test.Support.EitherResults
