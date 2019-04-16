@@ -37,3 +37,15 @@ specs = spec $ do
         bindings <- pure [] >>= bindType 1 MSuccess >>= bindType 1 MSuccess
         lookupMType bindings 1
       retrievedType \@/ MSuccess
+
+  describe "Multiple equivalent names for the same type" $ do
+    it "With two indexes, either can access the other's bindings" $ do
+      let retrievedType = do
+        bindings <- pure [] >>= equivalent 1 3 >>= bindType 1 MSuccess
+        lookupMType bindings 3
+      retrievedType \@/ MSuccess
+    it "With multiple indexes, can access the other's bindings transitively" $ do
+      let retrievedType = do
+        bindings <- pure [] >>= equivalent 1 3 >>= equivalent 3 5 >>= bindType 1 MSuccess
+        lookupMType bindings 5
+      retrievedType \@/ MSuccess

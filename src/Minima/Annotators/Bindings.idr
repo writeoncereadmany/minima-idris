@@ -22,7 +22,13 @@ Bindings = List Binding
 
 
 equivalent : Index -> Index -> Bindings -> Either MTypeError Bindings
-equivalent x y z = ?equivalent_rhs
+equivalent index1 index2 bindings = equivalent' [index1, index2] bindings where
+  equivalent' : List Index -> Bindings -> Either MTypeError Bindings
+  equivalent' indices [] = pure [ Equivalent indices ]
+  equivalent' indices (head@(Equivalent indices') :: bindings) = if any (`elem` indices') indices
+    then equivalent' (union indices indices') bindings
+    else [| pure head :: equivalent' indices bindings |]
+  equivalent' indices ((Bound ys x) :: xs) = ?hole_3
 
 bindType : Index -> MType -> Bindings -> Either MTypeError Bindings
 bindType index type [] = pure $ [ Bound [ index ] type ]
