@@ -3,7 +3,7 @@ module MinimaPrelude
 import Minima.AST
 import Minima.Annotators.Annotations
 import Minima.Parsing.Parser
-import Minima.Interpreter.Environment
+import Minima.Interpreter.DependentEnvironment
 import Minima.Interpreter.Interpreter
 import Minima.Interpreter.InterpreterState
 import Minima.Interpreter.Interaction
@@ -28,7 +28,7 @@ print = NativeFunction doPrint where
   doPrint i [(NumberValue x)] = pure (Success, i >>= (const $ print $ show x))
   doPrint _ args = Left $ "Expected a String or Number: got " ++ show args
 
-prelude : (Interaction i) => InterpreterState a (i ()) String
+prelude : (Interaction i) => InterpreterState 1 a (i ()) String
 prelude = MkInterpreterState [[("plus", plus), ("print", print)]] (pure ())
 
 export

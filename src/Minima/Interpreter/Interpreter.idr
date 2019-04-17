@@ -3,7 +3,7 @@ module Interpreter
 import Minima.AST
 import Minima.Annotators.Annotations
 import Minima.Interpreter.Value
-import Minima.Interpreter.Environment
+import Minima.Interpreter.DependentEnvironment
 import Minima.Interpreter.InterpreterState
 import Control.ST
 import Lens
@@ -18,7 +18,7 @@ mutual
   inSequence : (Eq n, Show n)
             => (env : Var)
             -> List (Expression a n)
-            -> ST (Either String) (List (Value a i n)) [ env ::: State (InterpreterState a i n) ]
+            -> ST (Either String) (List (Value a i n)) [ env ::: State (InterpreterState (S d) a i n) ]
   inSequence env [] = pure $ []
   inSequence env (x :: xs) = pure (!(interpret env x) :: !(inSequence env xs))
 
@@ -26,12 +26,12 @@ mutual
         => (env : Var)
         -> Value a i n
         -> List (Value a i n)
-        -> ST (Either String) (Value a i n) [env ::: State (InterpreterState a i n) ]
+        -> ST (Either String) (Value a i n) [env ::: State (InterpreterState (S d) a i n) ]
   invoke env (FunctionValue params body) args = do
-       update env (variables ^%= enterScope)
+       update env enter
        update env (variables ^%= defineAll (zip params args))
        result <- interpret env body
-       update env (variables ^%= exitScope)
+       update env exit
        pure result
   invoke env (NativeFunction f) args = do
        env' <- read env
@@ -44,7 +44,7 @@ mutual
   interpret : (Eq n, Show n)
            => (env : Var)
            -> Expression a n
-           -> ST (Either String) (Value a i n) [env ::: State (InterpreterState a i n)]
+           -> ST (Either String) (Value a i n) [env ::: State (InterpreterState (S d) a i n)]
   interpret env (StringLiteral _ text) = pure $ StringValue text
   interpret env (NumberLiteral _ number) = pure $ NumberValue number
   interpret env (Function _ args body) = pure $ FunctionValue args body
@@ -63,32 +63,32 @@ mutual
        arguments <- inSequence env args
        invoke env function arguments
   interpret env (Group _ seq) = do
-       update env (variables ^%= enterScope)
+       update env enter
        results <- inSequence env seq
-       update env (variables ^%= exitScope)
+       update env exit
        pure $ lastOf results
 
 runInterpreter' : (Show i, Eq i)
-               => InterpreterState as io i
+               => InterpreterState (S d) as io i
                -> Expression as i
-               -> ST (Either String) (InterpreterState as io i, Value as io i) []
+               -> ST (Either String) (InterpreterState (S d) as io i, Value as io i) []
 runInterpreter' prelude exp = do
   env <- new prelude
-  update env (variables ^%= enterScope)
+  update env enter
   result <- interpret env exp
-  update env (variables ^%= exitScope)
+  update env exit
   finalState <- read env
   delete env
   pure (finalState, result)
 
 runInterpreter : (Show i, Eq i)
-              => InterpreterState as io i
+              => InterpreterState (S d) as io i
               -> Expression as i
-              -> Either String (InterpreterState as io i, Value as io i)
+              -> Either String (InterpreterState (S d) as io i, Value as io i)
 runInterpreter prelude exp = run $ runInterpreter' prelude exp
 
 evalExp : (Show i, Eq i)
-       => InterpreterState as io i
+       => InterpreterState (S d) as io i
        -> Expression as i
        -> Either String (Value as io i)
 evalExp prelude exp = do
@@ -96,9 +96,9 @@ evalExp prelude exp = do
   pure value
 
 outputsFrom : (Show i, Eq i)
-          => InterpreterState as io i
+          => InterpreterState (S d) as io i
           -> Expression as i
-          -> Either String (InterpreterState as io i)
+          -> Either String (InterpreterState (S d) as io i)
 outputsFrom prelude exp = do
   (state, value) <- runInterpreter prelude exp
   pure state
