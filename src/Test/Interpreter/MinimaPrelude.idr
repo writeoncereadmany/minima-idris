@@ -32,15 +32,14 @@ prelude : (Interaction i) => InterpreterState a (i ()) String
 prelude = MkInterpreterState [[("plus", plus), ("print", print)]] (pure ())
 
 export
-run : String -> State (InterpreterState () (MockInteraction ()) String) (Either String (Value () (MockInteraction ()) String))
-run source = do let (Right prog) = parse program source | (Left error) => pure (Left error)
-                runProgram (stripAnnotations prog)
-
-export
 evaluate : String -> Either String (Value () (MockInteraction ()) String)
-evaluate source = evalState (run source) prelude
+evaluate source = do
+  prog <- stripAnnotations <$> parse program source
+  evalExp prelude prog
 
 export
 outputFrom : String -> Either String (List String)
-outputFrom source = let finalState = execState (run source) prelude
-                     in Right $ getOutput (io ^$ finalState)
+outputFrom source = do
+  prog <- stripAnnotations <$> parse program source
+  outputs <- outputsFrom prelude prog
+  pure $ getOutput (io ^$ outputs)

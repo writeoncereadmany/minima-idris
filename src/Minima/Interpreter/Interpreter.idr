@@ -5,7 +5,7 @@ import Minima.Annotators.Annotations
 import Minima.Interpreter.Value
 import Minima.Interpreter.Environment
 import Minima.Interpreter.InterpreterState
-import Control.Monad.State
+import Control.ST
 import Lens
 
 %access public export
@@ -14,53 +14,91 @@ lastOf : List (Value a i n) -> Value a i n
 lastOf [] = Success
 lastOf vals@(_ :: _) = last vals
 
-always : a -> State _ (Either _ a)
-always = pure . pure
-
 mutual
-  inSequence : (Eq n, Show n) =>
-               List (Expression a n) ->
-               State (InterpreterState a i n) (Either String (List (Value a i n)))
-  inSequence [] = pure $ Right []
-  inSequence (x :: xs) = do
-       (Right first) <- interpret x | (Left error) => pure (Left error)
-       (Right rest) <- inSequence xs | (Left error) => pure (Left error)
-       pure $ Right (first :: rest)
+  inSequence : (Eq n, Show n)
+            => (env : Var)
+            -> List (Expression a n)
+            -> ST (Either String) (List (Value a i n)) [ env ::: State (InterpreterState a i n) ]
+  inSequence env [] = pure $ []
+  inSequence env (x :: xs) = pure (!(interpret env x) :: !(inSequence env xs))
 
-  invoke : (Eq n, Show n) => Value a i n -> List (Value a i n) -> State (InterpreterState a i n) (Either String (Value a i n))
-  invoke (FunctionValue params body) args = do
-       modify (variables ^%= enterScope)
-       modify (variables ^%= defineAll (zip params args))
-       (Right result) <- interpret body | (Left error) => pure (Left error)
-       modify (variables ^%= exitScope)
-       pure $ Right result
-  invoke (NativeFunction f) args = do
-       interaction <- getL io <$> get
-       let (Right (val, newInteraction)) = f interaction args | (Left error) => pure (Left error)
-       modify (io ^= newInteraction)
-       pure $ Right val
-  invoke val _ = pure $ Left $ show val ++ " is not callable"
+  invoke : (Eq n, Show n)
+        => (env : Var)
+        -> Value a i n
+        -> List (Value a i n)
+        -> ST (Either String) (Value a i n) [env ::: State (InterpreterState a i n) ]
+  invoke env (FunctionValue params body) args = do
+       update env (variables ^%= enterScope)
+       update env (variables ^%= defineAll (zip params args))
+       result <- interpret env body
+       update env (variables ^%= exitScope)
+       pure result
+  invoke env (NativeFunction f) args = do
+       env' <- read env
+       let interaction = getL io env'
+       (val, newInteraction) <- lift $ f interaction args
+       update env (io ^= newInteraction)
+       pure val
+  invoke env val _ = lift $ Left $ show val ++ " is not callable"
 
-  interpret : (Eq n, Show n) => Expression a n -> State (InterpreterState a i n) (Either String (Value a i n))
-  interpret (StringLiteral _ text) = always $ StringValue text
-  interpret (NumberLiteral _ number) = always $ NumberValue number
-  interpret (Function _ args body) = always $ FunctionValue args body
-  interpret (Variable _ name) = do
-       value <- lookupValue name <$> getL variables <$> get
-       pure $ (maybeToEither (show name ++ " is undefined")) value
-  interpret (Definition _ name exp) = do
-       (Right value) <- interpret exp | (Left error) => pure (Left error)
-       modify (variables ^%= define name value)
-       pure $ Right Success
-  interpret (Call _ fun args) = do
-       (Right function) <- interpret fun | (Left error) => pure (Left error)
-       (Right arguments) <- inSequence args | (Left error) => pure (Left error)
-       invoke function arguments
-  interpret (Group _ seq) = do
-       modify (variables ^%= enterScope)
-       (Right results) <- inSequence seq | (Left error) => pure (Left error)
-       modify (variables ^%= exitScope)
-       pure $ Right (lastOf results)
+  interpret : (Eq n, Show n)
+           => (env : Var)
+           -> Expression a n
+           -> ST (Either String) (Value a i n) [env ::: State (InterpreterState a i n)]
+  interpret env (StringLiteral _ text) = pure $ StringValue text
+  interpret env (NumberLiteral _ number) = pure $ NumberValue number
+  interpret env (Function _ args body) = pure $ FunctionValue args body
+  interpret env (Variable _ name) = do
+       env' <- read env
+       let vars = getL variables env'
+       let value = lookupValue name vars
+       value <- lift $ (maybeToEither (show name ++ " is undefined")) $ lookupValue name vars
+       pure value
+  interpret env (Definition _ name exp) = do
+       value <- interpret env exp
+       update env (variables ^%= define name value)
+       pure Success
+  interpret env (Call _ fun args) = do
+       function <- interpret env fun
+       arguments <- inSequence env args
+       invoke env function arguments
+  interpret env (Group _ seq) = do
+       update env (variables ^%= enterScope)
+       results <- inSequence env seq
+       update env (variables ^%= exitScope)
+       pure $ lastOf results
 
-runProgram : (Eq n, Show n) => Expression a n -> State (InterpreterState a i n) (Either String (Value a i n))
-runProgram prog = interpret prog
+runInterpreter' : (Show i, Eq i)
+               => InterpreterState as io i
+               -> Expression as i
+               -> ST (Either String) (InterpreterState as io i, Value as io i) []
+runInterpreter' prelude exp = do
+  env <- new prelude
+  update env (variables ^%= enterScope)
+  result <- interpret env exp
+  update env (variables ^%= exitScope)
+  finalState <- read env
+  delete env
+  pure (finalState, result)
+
+runInterpreter : (Show i, Eq i)
+              => InterpreterState as io i
+              -> Expression as i
+              -> Either String (InterpreterState as io i, Value as io i)
+runInterpreter prelude exp = run $ runInterpreter' prelude exp
+
+evalExp : (Show i, Eq i)
+       => InterpreterState as io i
+       -> Expression as i
+       -> Either String (Value as io i)
+evalExp prelude exp = do
+  (state, value) <- runInterpreter prelude exp
+  pure value
+
+outputsFrom : (Show i, Eq i)
+          => InterpreterState as io i
+          -> Expression as i
+          -> Either String (InterpreterState as io i)
+outputsFrom prelude exp = do
+  (state, value) <- runInterpreter prelude exp
+  pure state
