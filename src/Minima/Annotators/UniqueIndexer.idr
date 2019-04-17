@@ -75,15 +75,27 @@ mutual
                                   rest <- overAll env next xs
                                   pure (first :: rest)
 
-uniqueIndex' : (Show i, Eq i) => Expression as i -> ST (Either NameError) (Expression as Index) []
-uniqueIndex' exp = do indices <- new 0
-                      env <- new []
-                      update env enterScope
-                      indexed <- addIndices env indices exp
-                      update env exitScope
-                      delete indices
-                      delete env
-                      pure indexed
+uniqueIndex' : (Show i, Eq i)
+            => Environment d i Index
+            -> Expression as i
+            -> ST (Either NameError) (Expression as Index) []
+uniqueIndex' xs exp = do indices <- new 0
+                         env <- new xs
+                         update env enterScope
+                         indexed <- addIndices env indices exp
+                         update env exitScope
+                         delete indices
+                         delete env
+                         pure indexed
 
-uniqueIndex : (Show i, Eq i) => Expression as i -> Either NameError (Expression as Index)
-uniqueIndex exp = run $ uniqueIndex' exp
+uniqueIndex : (Show i, Eq i)
+           => Expression as i
+           -> Either NameError (Expression as Index)
+uniqueIndex exp = run $ uniqueIndex' [] exp
+
+
+uniqueIndexWith : (Show i, Eq i)
+               => Environment d i Index
+               -> Expression as i
+               -> Either NameError (Expression as Index)
+uniqueIndexWith xs exp = run $ uniqueIndex' xs exp

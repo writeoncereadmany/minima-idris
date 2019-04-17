@@ -12,21 +12,25 @@ import Minima.Annotators.MiniTyper
 import Minima.Annotators.MTypes
 import Minima.Annotators.UniqueIndexer
 import Minima.Annotators.Bindings
+import Minima.Interpreter.DependentEnvironment
 import Test.Support.EitherResults
 
 import Specdris.Spec
 
 %access public export
 
-typeWith : Bindings -> String -> Either String MType
-typeWith bindings source = do
+typeWith : Environment d String Index
+        -> Bindings
+        -> String
+        -> Either String MType
+typeWith env bindings source = do
   ast <- parse program source
-  indexed <- uniqueIndex ast
+  indexed <- uniqueIndexWith env ast
   typed <- typeExpWith bindings indexed
   pure $ typeOf typed
 
 type : String -> Either String MType
-type = typeWith []
+type = typeWith [] []
 
 specs : IO ()
 specs = spec $ do
@@ -92,4 +96,9 @@ specs = spec $ do
       type "42, 69" >.< "Type Error: Return values of non-terminal group expressions must not be ignored: ignoring a Number"
     it "Works out return type of function from its parameters" $ do
       type "fun is [a, b] => a, fun[12, 'Hello']" \@/ MNumber
- 
+    it "Cascades types from prelude" $ do
+      let type = do
+        let env = [[("plus", -5)]]
+        bindings <- pure [] >>= bindType (-5) (MFunction [MNumber, MNumber] MNumber)
+        typeWith env bindings "plus[7, 5]"
+      type \@/ MNumber
