@@ -59,3 +59,8 @@ lookupMType ((Bound indices type) :: bindings) index = if index `elem` indices
   then pure type
   else lookupMType bindings index
 lookupMType ((Equivalent _) :: bindings) index = lookupMType bindings index
+
+lookupMType' : Bindings -> Index -> MType
+lookupMType' bindings index = case lookupMType bindings index of
+  (Left _) => MUnbound index
+  (Right type) => type

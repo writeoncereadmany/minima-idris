@@ -9,13 +9,6 @@ import Control.ST
 
 %access public export
 
--- Typed : List (Type, Type) -> Type -> Type
--- Typed as index = Expression (Record (('MTyp, MType) :: as)) index
-
--- typeOf : Typed as i -> MType
--- typeOf exp = getField 'MTyp (annotations exp)
-
-
 zipWithM : (Monad m) => (a -> b -> m c) -> List a -> List b -> m (List c)
 zipWithM f [] _ = pure []
 zipWithM f _ [] = pure []
@@ -63,60 +56,69 @@ mutual
     (Right type) => type
   instantiate bindings type = type
 
-{-
+Typed : List (Type, Type) -> Type -> Type
+Typed as index = Expression (Record (('MTyp, MType) :: as)) index
+
+typeOf : Typed as i -> MType
+typeOf exp = getField 'MTyp (annotations exp)
+
+returnType : MType -> Either MTypeError MType
+returnType (MFunction args ret) = pure ret
+returnType _ = Left $ MkTypeError "Not a function type"
+
+lastTypeUnlessNonSuccess : List MType -> Either MTypeError MType
+lastTypeUnlessNonSuccess [] = pure MSuccess
+lastTypeUnlessNonSuccess [type] = pure type
+lastTypeUnlessNonSuccess (MSuccess :: xs) = lastTypeUnlessNonSuccess xs
+lastTypeUnlessNonSuccess (type :: _) = Left $ MkTypeError
+  $ "Return values of non-terminal group expressions must not be ignored: ignoring a " ++ show type
+
 mutual
-  addTypes : (types : Var)
+  addTypes : (bindings : Var)
           -> Expression (Record as) Index
-          -> ST m (Typed as Index) [types ::: State (List (Index, MType))]
-  addTypes types (StringLiteral as text) = pure $ StringLiteral ('MTyp := MString :: as) text
-  addTypes types (NumberLiteral as num) = pure $ NumberLiteral ('MTyp := MNumber :: as) num
-  addTypes types (Variable as name) = do typeList <- read types
-                                         let type = lookupType name typeList
-                                         pure $ Variable ('MTyp := type :: as) name
-  addTypes types (Definition as name value) = do value' <- addTypes types value
-                                                 let type = typeOf value'
-                                                 update types ((name, type) ::)
-                                                 pure $ Definition ('MTyp := MSuccess :: as) name value'
-  addTypes types (Function as args body) = do let paramTypes = (\x => (x, MUnbound x)) <$> args
-                                              let params = snd <$> paramTypes
-                                              update types (paramTypes ++)
-                                              body' <- addTypes types body
-                                              let type = MFunction params (typeOf body')
-                                              pure $ Function ('MTyp := type :: as) args body'
-  -- call is the tricky one: this is where we need to unify types, and the only stage we can get type errors
-  addTypes types (Call as fun args) = do fun' <- addTypes types fun
-                                         args' <- addAllTypes types args
-                                         let funtype = typeOf fun'
-                                         let argtypes = typeOf <$> args'
-                                         let unified = unify funtype (MFunction argtypes (MUnbound (-1)))
-                                         pure $ Call ('MTyp := unified :: as) fun' args'
-  addTypes types (Group as exps) = do expressions <- addAllTypes types exps
-                                      let type = lastTypeUnlessNonSuccess (typeOf <$> expressions)
-                                      pure $ Group ('MTyp := type :: as) expressions
+          -> ST (Either MTypeError) (Typed as Index) [bindings ::: State Bindings]
+  addTypes bindings (StringLiteral as text) =
+    pure $ StringLiteral ('MTyp := MString :: as) text
+  addTypes bindings (NumberLiteral as num) =
+    pure $ NumberLiteral ('MTyp := MNumber :: as) num
+  addTypes bindings (Variable as index) =
+    pure $ Variable ('MTyp := (lookupMType' !(read bindings) index) :: as) index
+  addTypes bindings (Definition as index value) = do
+    value' <- addTypes bindings value
+    newBindings <- lift $ bindType index (typeOf value') !(read bindings)
+    write bindings newBindings
+    pure $ Definition ('MTyp := MSuccess :: as) index value'
+  addTypes bindings (Function as args body) = do
+    body' <- addTypes bindings body
+    let type = MFunction (MUnbound <$> args) (typeOf body')
+    pure $ Function ('MTyp := type :: as) args body'
+  addTypes bindings (Call as fun args) = do
+    fun' <- addTypes bindings fun
+    args' <- addAllTypes bindings args
+    let funType = typeOf fun'
+    let callType = MFunction (typeOf <$> args') (MUnbound (-1))
+    (_, type) <- lift $ unify !(read bindings) funType callType
+    retType <- lift $ returnType type
+    pure $ Call ('MTyp := retType :: as) fun' args'
+  addTypes bindings (Group as exps) = do
+    expressions <- addAllTypes bindings exps
+    lastType <- lift $ lastTypeUnlessNonSuccess (typeOf <$> expressions)
+    pure $ Group ('MTyp := lastType :: as) expressions
 
-  lastTypeUnlessNonSuccess : List MType -> MType
-  lastTypeUnlessNonSuccess [] = MSuccess
-  lastTypeUnlessNonSuccess [type] = type
-  lastTypeUnlessNonSuccess (MSuccess :: xs) = lastTypeUnlessNonSuccess xs
-  lastTypeUnlessNonSuccess (MTypeError msg :: _) = MTypeError msg
-  lastTypeUnlessNonSuccess (type :: _) = MTypeError
-    $ "Return values of non-terminal group expressions must not be ignored: ignoring a " ++ show type
-
-  addAllTypes : (types : Var)
+  addAllTypes : (bindings : Var)
              -> List (Expression (Record as) Index)
-             -> ST m (List (Typed as Index)) [types ::: State (List (Index, MType))]
-  addAllTypes types [] = pure []
-  addAllTypes types (x :: xs) = do
-    first <- addTypes types x
-    rest <- addAllTypes types xs
+             -> ST (Either MTypeError) (List (Typed as Index)) [bindings ::: State Bindings]
+  addAllTypes bindings [] = pure []
+  addAllTypes bindings (x :: xs) = do
+    first <- addTypes bindings x
+    rest <- addAllTypes bindings xs
     pure $ first :: rest
 
-typeExp' : Expression (Record as) Index -> ST m (Typed as Index) []
+typeExp' : Expression (Record as) Index -> ST (Either MTypeError) (Typed as Index) []
 typeExp' exp = do types <- new []
                   typed <- addTypes types exp
                   delete types
                   pure typed
 
-typeExp : Expression (Record as) Index -> Typed as Index
-typeExp exp = runPure $ typeExp' exp
--}
+typeExp : Expression (Record as) Index -> Either MTypeError (Typed as Index)
+typeExp exp = run $ typeExp' exp

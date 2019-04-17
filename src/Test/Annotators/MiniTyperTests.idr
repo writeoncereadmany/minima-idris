@@ -62,3 +62,7 @@ specs = spec $ do
       unify [] invocation2 generic \@/ ([], expected)
       unify [] generic invocation1 \@/ ([], expected)
       unify [] generic invocation2 \@/ ([], expected)
+
+  -- describe "Annotates an expression tree with appropriate types" $ do
+  --   it "Assigns appropriate types to Strings" $ do
+  --     type = do

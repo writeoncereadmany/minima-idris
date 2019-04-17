@@ -10,7 +10,11 @@ data MType = MString
            | MFunction (List MType) MType
            | MUnbound Index
 
-data MTypeError = MkTypeError String
+MTypeError : Type
+MTypeError = String
+
+MkTypeError : String -> String
+MkTypeError s = "Type Error: " ++ s
 
 mutual
   Eq MType where
@@ -27,15 +31,9 @@ mutual
   allEq (_ :: _) [] = False
   allEq (x :: xs) (y :: ys) = x == y && allEq xs ys
 
-Eq MTypeError where
-  (==) (MkTypeError a) (MkTypeError b) = a == b
-
 Show MType where
   show MString = "String"
   show MNumber = "Number"
   show MSuccess = "Success"
   show (MUnbound x) = "Unbound " ++ show x
   show (MFunction xs x) = show xs ++ " -> " ++ show x
-
-Show MTypeError where
-  show (MkTypeError x) = "Type Error: " ++ x
