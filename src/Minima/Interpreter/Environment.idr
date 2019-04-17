@@ -16,11 +16,11 @@ enterScope : Environment k v -> Environment k v
 enterScope existingEnvironment = [] :: existingEnvironment
 
 exitScope : Environment k v -> Environment k v
-exitScope [] = ?exitScope_rhs_1
+exitScope [] = []
 exitScope (currentScope :: higherScopes) = higherScopes
 
 define : k -> v -> Environment k v -> Environment k v
-define x y [] = ?define_rhs_1
+define x y [] = []
 define name value (currentScope :: higherScopes) = ((name, value) :: currentScope) :: higherScopes
 
 defineAll : List (k, v) -> Environment k v -> Environment k v
