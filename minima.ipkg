@@ -4,32 +4,14 @@ sourcedir = src
 
 pkgs = specdris, lightyear, lens, contrib
 
-modules = Minima.AST
-        , Minima.Record
-        , Minima.Annotators.Annotations
-        , Minima.Annotators.Scoper
-        , Minima.Annotators.UniqueIndexer
-        , Minima.Parsing.Parser
-        , Minima.Types.MinimaTypes
-        , Minima.Types.Bindings
-        , Minima.Types.TypeErrors
-        , Minima.Types.Assignment
-        , Minima.Types.Call
-        , Minima.Types.Unification
-        , Minima.Interpreter.Interpreter
-        , Minima.Interpreter.InterpreterState
-        , Minima.Interpreter.Value
-        -- test cases
-        , Test.Annotators.AnnotationTests
+modules = Test.Annotators.AnnotationTests
         , Test.Annotators.MiniTyperTests
         , Test.Annotators.BindingsTests
         , Test.Annotators.UniqueIndexerTests
         , Test.Interpreter.InterpreterTest
-        , Test.Interpreter.MinimaPrelude
         , Test.Interpreter.FileTests
         , Test.Parsing.ParserTest
         , Test.Types.AssignmentTest
-        , Test.Support.EitherResults
         , Test.Types.CallTest
         , Test.Types.UnificationTest
 
