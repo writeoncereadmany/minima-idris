@@ -1,5 +1,13 @@
 module MiniTyperTests
 
+import Lightyear.Strings
+import Lightyear.Position
+import Lightyear
+
+import Minima.Parsing.Parser
+import Minima.AST
+import Minima.Record
+
 import Minima.Annotators.MiniTyper
 import Minima.Annotators.MTypes
 import Minima.Annotators.UniqueIndexer
@@ -9,6 +17,13 @@ import Test.Support.EitherResults
 import Specdris.Spec
 
 %access public export
+
+type : String -> Either String MType
+type source = do
+  ast <- parse program source
+  indexed <- uniqueIndex ast
+  typed <- typeExp indexed
+  pure $ typeOf typed
 
 specs : IO ()
 specs = spec $ do
@@ -63,6 +78,10 @@ specs = spec $ do
       unify [] generic invocation1 \@/ ([], expected)
       unify [] generic invocation2 \@/ ([], expected)
 
-  -- describe "Annotates an expression tree with appropriate types" $ do
-  --   it "Assigns appropriate types to Strings" $ do
-  --     type = do
+  describe "Annotates an expression tree with appropriate types" $ do
+    it "Assigns appropriate types to Strings" $ do
+      type "'Hello!'" \@/ MString
+    it "Assigns appropriate types to Numbers" $ do
+      type "42" \@/ MNumber
+    it "Remembers the type of a variable" $ do
+      type "x is 42, x" \@/ MNumber
