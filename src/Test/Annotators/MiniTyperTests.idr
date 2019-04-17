@@ -18,12 +18,15 @@ import Specdris.Spec
 
 %access public export
 
-type : String -> Either String MType
-type source = do
+typeWith : Bindings -> String -> Either String MType
+typeWith bindings source = do
   ast <- parse program source
   indexed <- uniqueIndex ast
-  typed <- typeExp indexed
+  typed <- typeExpWith bindings indexed
   pure $ typeOf typed
+
+type : String -> Either String MType
+type = typeWith []
 
 specs : IO ()
 specs = spec $ do
@@ -85,3 +88,8 @@ specs = spec $ do
       type "42" \@/ MNumber
     it "Remembers the type of a variable" $ do
       type "x is 42, x" \@/ MNumber
+    it "Rejects programs which throw away results" $ do
+      type "42, 69" >.< "Type Error: Return values of non-terminal group expressions must not be ignored: ignoring a Number"
+    it "Works out return type of function from its parameters" $ do
+      type "fun is [a, b] => a, fun[12, 'Hello']" \@/ MNumber
+ 

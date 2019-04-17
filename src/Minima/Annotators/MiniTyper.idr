@@ -114,11 +114,14 @@ mutual
     rest <- addAllTypes bindings xs
     pure $ first :: rest
 
-typeExp' : Expression (Record as) Index -> ST (Either MTypeError) (Typed as Index) []
-typeExp' exp = do types <- new []
-                  typed <- addTypes types exp
-                  delete types
-                  pure typed
+typeExp' : Bindings -> Expression (Record as) Index -> ST (Either MTypeError) (Typed as Index) []
+typeExp' bindings exp = do types <- new bindings
+                           typed <- addTypes types exp
+                           delete types
+                           pure typed
 
 typeExp : Expression (Record as) Index -> Either MTypeError (Typed as Index)
-typeExp exp = run $ typeExp' exp
+typeExp exp = run $ typeExp' [] exp
+
+typeExpWith : Bindings -> Expression (Record as) Index -> Either MTypeError (Typed as Index)
+typeExpWith bindings exp = run $ typeExp' bindings exp
