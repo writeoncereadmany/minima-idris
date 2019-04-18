@@ -51,9 +51,7 @@ mutual
       pure $ (b, MFunction boundArgs boundRet)
 
   instantiate : Bindings -> MType -> MType
-  instantiate bindings unbound@(MUnbound index) = case lookupMType bindings index of
-    (Left error) => unbound
-    (Right type) => type
+  instantiate bindings unbound@(MUnbound index) = lookupMType' bindings index
   instantiate bindings type = type
 
 Typed : List (Type, Type) -> Type -> Type

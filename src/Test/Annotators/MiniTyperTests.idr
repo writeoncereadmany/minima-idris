@@ -102,3 +102,9 @@ specs = spec $ do
         bindings <- pure [] >>= bindType (-5) (MFunction [MNumber, MNumber] MNumber)
         typeWith env bindings "plus[7, 5]"
       type \@/ MNumber
+    it "Populates the argument type of a function from its body" $ do
+      let type = do
+        let env = [[("plus", -5)]]
+        bindings <- pure [] >>= bindType (-5) (MFunction [MNumber, MNumber] MNumber)
+        typeWith env bindings "sum is [a, b, c, d] => (x is plus[a, b], y is plus[c, d], plus[x, y]), sum"
+      type \@/ MFunction [MNumber, MNumber, MNumber, MNumber] MNumber
